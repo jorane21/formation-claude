@@ -221,10 +221,18 @@ button:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 .copy pre{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--f-mono);font-size:.8rem;white-space:pre-wrap;overflow-x:auto}
 .copy .ctl{justify-self:start;flex:none;padding:7px 12px;font-size:.88rem}
 .copy .panel.wide{grid-column:1/-1;border:2px solid var(--navy)}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.opt{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:4px;align-content:start;background:var(--bg)}
+.opt.best{border:2px solid var(--ok)}
+.opt .on{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opt.best .on{color:var(--ok)}
+.opt b{font-family:var(--f-display);font-size:1rem}
+.opt p{margin:0;font-size:.88rem}
+.opt .note{font-size:.8rem;color:var(--warn)}
 .copy .step0{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
 
 @media (max-width:760px){
-  .trio,.split,.mem-grid,.sw-grid,.rules2,.ab,.size,.copy,.duo2{grid-template-columns:minmax(0,1fr)}
+  .trio,.split,.mem-grid,.sw-grid,.rules2,.ab,.size,.copy,.duo2,.opts{grid-template-columns:minmax(0,1fr)}
   .flow{grid-template-columns:minmax(0,1fr)}
   .flow .arr{transform:rotate(90deg)}
   .todo{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -529,6 +537,36 @@ Corrige ce qui n'est pas respecté, puis revérifie. Trois tours au maximum.
 Termine par un bilan : corrections faites, règles de DESIGN.md trop vagues à réécrire.</pre>
       <button class="ctl" type="button" data-copy="p2">Copier</button>
     </div>
+    <div class="panel wide frame">
+      <span class="step0">Avant la présentation · fixer le cadre</span>
+      <h3>D'où vient la charte ? Trois façons de l'appeler</h3>
+      <p class="when">Votre charte peut déjà exister sous forme de <strong>design system</strong> enregistré dans votre compte Claude (onglet Personnalisation), par exemple « Akyos Design System » : README, couleurs, police, espacements, logo, composants. Avant de lancer la présentation, choisissez comment Claude va la trouver.</p>
+      <div class="opts">
+        <div class="opt">
+          <span class="on">1 · Ponctuel</span>
+          <b>Le nommer dans la demande</b>
+          <p>« Crée une présentation pour [client] en utilisant l'<strong>Akyos Design System</strong>. » Claude lit la charte avant de produire. Sans son nom, il ne l'utilise pas.</p>
+        </div>
+        <div class="opt">
+          <span class="on">2 · Automatique</span>
+          <b>Le régler par défaut</b>
+          <p>Il s'applique alors à toutes vos présentations et maquettes sans le citer. Attention : c'est un réglage de compte, il touche aussi les visuels de vos autres clients.</p>
+          <p class="note">Réglage sur claude.ai : emplacement à vérifier dans votre version.</p>
+        </div>
+        <div class="opt best">
+          <span class="on">3 · Projet récurrent</span>
+          <b>En tirer un DESIGN.md local</b>
+          <p>Claude extrait du design system un DESIGN.md d'une page, rangé dans le dossier du projet, puis le bloc « Visuels » de CLAUDE.md le convoque à chaque visuel. Fonctionne en local (Cowork sur un dossier, Claude Code). Limite : c'est une copie, à régénérer si la charte change.</p>
+        </div>
+      </div>
+      <p class="when"><strong>Recommandation :</strong> la façon 1 pour une demande ponctuelle, la façon 3 pour un projet qui produit des visuels régulièrement. Dans le prompt ci-dessous, remplacez « DESIGN.md » par le nom du design system si vous choisissez la façon 1.</p>
+      <pre id="p4">Lis le design system « [nom, ex. Akyos Design System] » (README, couleurs, typographie, espacements, règles d'usage du logo).
+Rédige à partir de lui un DESIGN.md d'une page au maximum, avec les rubriques : Identité, Couleurs (code + rôle), Typographie, Mise en page, Composants, Toujours / Jamais.
+Reprends les codes et les polices exacts du design system, n'en invente aucun. Signale ce qui manque.
+Indique en tête du fichier sa source et la date d'extraction.
+N'enregistre rien avant que je dise « je valide ».</pre>
+      <button class="ctl" type="button" data-copy="p4">Copier le prompt d'extraction (façon 3)</button>
+    </div>
     <div class="panel wide">
       <span class="step0">Exemple d'usage · une présentation client</span>
       <h3>Prompt : une présentation qui applique DESIGN.md</h3>
@@ -688,10 +726,10 @@ Q.forEach(([s,ans,why])=>{
 });
 
 document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
-  const t=document.getElementById(b.dataset.copy).textContent;
+  const l=b.dataset.label||(b.dataset.label=b.textContent);const t=document.getElementById(b.dataset.copy).textContent;
   try{await navigator.clipboard.writeText(t);b.textContent='Copié ✓'}
   catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById(b.dataset.copy));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Texte sélectionné'}
-  setTimeout(()=>b.textContent='Copier',2000);
+  setTimeout(()=>b.textContent=l,2000);
 });
 go(0);
 </script>
