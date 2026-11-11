@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le fichier DESIGN.md</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Fraunces:opsz,wght@9..144,700&display=swap">
+<style>
+/* Même gabarit que animation-memory-md.html : scène bleu nuit + pupitre de narration, puis exercice et prompts à copier */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --fg:#0d1a3b; --muted:#56627c; --line:#d8deea;
+  --navy:#0f2a7a; --ok:#17784f; --ok-bg:#e4f4ec; --warn:#b4400f; --warn-bg:#fdeee5;
+  --stage:#0b1858; --stage-2:#16247a; --stage-3:#22318f; --stage-fg:#eef2fb; --stage-muted:#a3aed0;
+  --lime:#e2ff1a; --blue:#58a6ff; --orange:#ffad5c; --green:#6fe0a6; --red:#ff8a8a;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  /* marque fictive de l'exemple (identique dans les deux thèmes : c'est un échantillon) */
+  --n-creme:#F6F1E7; --n-texte:#2B1D14; --n-sapin:#2F5D50; --n-noyer:#8A5A3B;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.05;margin:0;color:var(--navy);text-wrap:balance;letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+code,.mono{font-family:var(--f-mono)}
+
+/* ---------- Scène ---------- */
+.stage{position:relative;background:radial-gradient(120% 140% at 90% 0%,var(--stage-3) 0%,var(--stage) 60%);color:var(--stage-fg);border-radius:16px;min-height:440px;overflow:hidden}
+.stage::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border:28px solid var(--lime);border-radius:50%;opacity:.18;pointer-events:none}
+.scene{display:none;padding:26px clamp(14px,3.4vw,34px);gap:18px;position:relative;z-index:1}
+.scene.on{display:grid}
+.tag{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--stage-muted)}
+.big{font-family:var(--f-display);font-weight:800;font-size:clamp(1.3rem,2.8vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
+.big em{font-style:normal;color:var(--lime)}
+.scene.on .a{animation:rise .55s cubic-bezier(.3,.7,.2,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.win-h{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1);font-family:var(--f-mono);font-size:.76rem;color:var(--stage-muted)}
+.win-h i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+.bub{padding:8px 12px;border-radius:12px;font-size:.9rem;line-height:1.4;background:#f4f6ff;color:#0d1a3b;justify-self:start;max-width:100%}
+.bub .who{display:block;font-family:var(--f-mono);font-size:.68rem;opacity:.65;margin-bottom:2px}
+
+/* mini-maquettes de page d'accueil */
+.mock{border-radius:10px;overflow:hidden;font-size:.78rem;line-height:1.35;min-width:0;border:1px solid rgba(255,255,255,.18)}
+.m-nav{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;font-size:.72rem;flex-wrap:wrap}
+.m-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;padding:10px 12px 16px;align-items:center}
+.m-photo{aspect-ratio:4/3;border-radius:6px;display:grid;place-items:center;text-align:center;font-size:.66rem;padding:6px}
+.mock h4{margin:0 0 4px;font-size:1rem;line-height:1.15}
+.mock p{margin:0 0 8px}
+.m-btn{display:inline-block;padding:5px 10px;font-weight:600;font-size:.72rem}
+.mock.generic{background:linear-gradient(135deg,#7b5cff,#c04dff);color:#fff;font-family:system-ui,sans-serif}
+.mock.generic .m-photo{background:rgba(255,255,255,.22);border-radius:14px}
+.mock.generic .m-btn{background:#fff;color:#6b3df5;border-radius:999px}
+.mock.brand{background:var(--n-creme);color:var(--n-texte);font-family:var(--f-body)}
+.mock.brand .m-nav b{font-family:"Fraunces",Georgia,serif;color:var(--n-noyer);font-size:.85rem}
+.mock.brand h4{font-family:"Fraunces",Georgia,serif;color:var(--n-texte)}
+.mock.brand .m-photo{background:repeating-linear-gradient(100deg,#8A5A3B 0 7px,#9c6a48 7px 15px);color:var(--n-creme);border-radius:3px}
+.mock.brand .m-btn{background:var(--n-sapin);color:var(--n-creme);border-radius:4px}
+.mock .lbl{font-family:var(--f-mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;opacity:.75;padding:6px 12px 0}
+
+/* scène 1 */
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.verdict{font-family:var(--f-mono);font-size:.8rem;color:var(--orange);text-align:center}
+
+/* scène 2 */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:center}
+.tree{font-family:var(--f-mono);font-size:clamp(.82rem,1.6vw,.98rem);line-height:1.75;background:var(--stage-2);border-radius:12px;padding:16px 20px;white-space:pre;overflow-x:auto;border:1px solid rgba(255,255,255,.12)}
+.tree .dim{color:var(--stage-muted)}
+.tree .hot{color:#0b1858;background:var(--lime);padding:1px 6px;border-radius:4px;font-weight:600}
+.files3{display:grid;gap:8px}
+.files3 div{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:10px;align-items:baseline;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.files3 b{font-family:var(--f-mono);font-size:.8rem;color:var(--blue)}
+.files3 .me b{color:var(--lime)}
+.files3 .me{border-color:var(--lime)}
+.analogy{border:2px dashed var(--lime);border-radius:12px;padding:12px 14px;font-size:.9rem}
+.analogy b{color:var(--lime);font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;display:block}
+
+/* scène 3 : le fichier */
+.mem-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;align-items:start}
+.file{background:#081245;border:1px solid rgba(255,255,255,.14);border-radius:12px;font-family:var(--f-mono);font-size:clamp(.74rem,1.4vw,.85rem);line-height:1.55;min-width:0;overflow:hidden}
+.file .body{padding:12px 16px;display:grid;gap:1px;overflow-x:auto}
+.ln{white-space:pre-wrap}
+.h1{color:var(--orange);font-weight:600}
+.h2{color:var(--blue);font-weight:600;margin-top:5px}
+.rub{display:grid;gap:8px;align-content:start}
+.rub div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;font-size:.9rem}
+.rub span{font-family:var(--f-mono);font-size:.72rem;color:var(--blue);background:rgba(88,166,255,.12);padding:2px 8px;border-radius:999px;white-space:nowrap}
+
+/* scène 4 : nuancier interactif */
+.sw-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:22px;align-items:start}
+.swatches{display:grid;gap:8px}
+.sw{display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:center;text-align:left;background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;color:var(--stage-fg);cursor:pointer}
+.sw:hover,.sw[aria-pressed="true"]{border-color:var(--lime)}
+.sw i{width:38px;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,.3)}
+.sw b{display:block;font-size:.92rem}
+.sw small{font-family:var(--f-mono);font-size:.72rem;color:var(--stage-muted)}
+.hl-cap{font-size:.85rem;color:var(--stage-muted);min-height:2.6em}
+.hl-cap strong{color:var(--lime)}
+.mock [data-r]{transition:outline-color .2s}
+.mock .hl{outline:3px solid var(--lime);outline-offset:2px}
+
+/* scène 5 : toujours / jamais */
+.rules2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.col{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-top:4px solid var(--green);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start}
+.col.no{border-top-color:var(--red)}
+.col h3{margin:0;font-family:var(--f-mono);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
+.col.no h3{color:var(--red)}
+.col div{font-size:.9rem}
+.col div::before{content:"✓ ";color:var(--green);font-weight:700}
+.col.no div::before{content:"✕ ";color:var(--red)}
+.why{font-size:.88rem;color:var(--stage-muted)}
+
+/* scène 6 : le branchement */
+.flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.box{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:12px;font-size:.88rem;display:grid;gap:4px;min-width:0}
+.box b{font-family:var(--f-mono);font-size:.78rem;color:var(--blue)}
+.box.lime{border-color:var(--lime)}.box.lime b{color:var(--lime)}
+.arr{font-size:1.4rem;color:var(--lime);text-align:center}
+.cmd{font-family:var(--f-mono);font-size:.82rem;background:#081245;border:1px solid var(--lime);border-radius:8px;padding:10px 12px;white-space:pre-wrap}
+
+
+/* scènes 7-8 : personnalisation vs local */
+.duo2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.app,.log{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;min-width:0}
+.app-b{padding:12px;display:grid;gap:8px}
+.field{display:grid;gap:3px;background:#081245;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px}
+.fl{font-family:var(--f-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--stage-muted)}
+.fv{font-size:.85rem}
+.chip{display:inline-block;background:rgba(226,255,26,.14);color:var(--lime);border-radius:6px;padding:1px 7px;font-family:var(--f-mono);font-size:.74rem;margin:2px 4px 2px 0}
+.bub.ai{background:var(--stage-3);color:var(--stage-fg);border:1px solid rgba(255,255,255,.15)}
+.bub.ai .who{color:var(--lime);opacity:1}
+.out{font-family:var(--f-mono);font-size:.78rem;color:var(--green)}
+.pts{display:grid;gap:8px}
+.pt{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-left:4px solid var(--blue);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.pt b{display:block;font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:2px}
+.pt.warn{border-left-color:var(--orange)}.pt.warn b{color:var(--orange)}
+.pt.ok{border-left-color:var(--green)}.pt.ok b{color:var(--green)}
+.log ol{list-style:none;margin:0;padding:10px 12px;display:grid;gap:5px}
+.log li{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:10px;align-items:baseline;font-size:.86rem}
+.log code{font-size:.8rem;color:var(--blue)}
+.ic{font-family:var(--f-mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;text-align:center;border-radius:999px;padding:1px 6px;background:rgba(255,255,255,.1);color:var(--stage-muted)}
+.log .you .ic{background:#f4f6ff;color:#0d1a3b}
+.log .hot{background:rgba(226,255,26,.1);border-radius:6px;outline:1px solid var(--lime);padding:3px 0}
+.log .hot .ic{background:var(--lime);color:#0b1858}
+.log .bad .ic{background:rgba(255,138,138,.2);color:var(--red)}
+.log .good .ic{background:rgba(111,224,166,.2);color:var(--green)}
+
+/* scène 9 : avant / après */
+.toggle{display:inline-flex;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:3px;gap:3px;justify-self:start}
+.toggle button{border:0;border-radius:999px;padding:6px 14px;background:transparent;color:var(--stage-fg);cursor:pointer;font-weight:600;font-size:.88rem}
+.toggle button[aria-pressed="true"]{background:var(--lime);color:#0b1858}
+.ab{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;align-items:start}
+.ab .mock{font-size:.88rem}
+.ab .mock.brand,.ab.after .mock.generic{display:none}
+.ab.after .mock.brand{display:block}
+.checks{display:grid;gap:6px;font-size:.88rem}
+.checks div::before{content:"✕ ";color:var(--red);font-weight:700}
+.ab.after .checks div::before{content:"✓ ";color:var(--green)}
+.checks .t-after{display:none}.ab.after .checks .t-before{display:none}.ab.after .checks .t-after{display:inline}
+
+/* scène 8 : court */
+.size{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.size .col div::before{content:none}
+.meter{height:10px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:100%}
+.col.short .meter i{background:var(--green);width:14%}
+.quote{font-size:.9rem;border-left:3px solid var(--lime);padding-left:12px;color:var(--stage-muted)}
+
+/* scène 9 */
+.todo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.todo div{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:12px;font-size:.88rem;display:grid;gap:4px;align-content:start}
+.todo b{font-family:var(--f-display);font-size:1.5rem;color:var(--lime);line-height:1}
+
+/* ---------- Pupitre ---------- */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 26px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px)}
+.narr{min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.narr h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.25rem,2.5vw,1.65rem);margin:4px 0 8px;line-height:1.15;text-wrap:balance}
+.narr p{margin:0 0 8px;max-width:68ch}
+.narr .key{background:var(--ok-bg);color:var(--ok);padding:8px 12px;border-radius:8px;font-weight:500}
+.narr .warn{background:var(--warn-bg);color:var(--warn);padding:8px 12px;border-radius:8px}
+.controls{display:flex;flex-direction:column;gap:10px;min-width:210px}
+.row{display:flex;gap:8px}
+button{font:inherit}
+.ctl{font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;cursor:pointer;flex:1}
+.ctl:hover{border-color:var(--navy)}
+.ctl.primary{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.ctl:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--f-mono);font-size:.72rem;cursor:pointer;padding:0}
+.dot.cur{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.dot.seen{border-color:var(--navy);color:var(--navy)}
+.hint{font-size:.75rem;color:var(--muted);text-align:center}
+
+/* ---------- Exercice ---------- */
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px);display:grid;gap:12px}
+.quiz h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.2rem,2.4vw,1.5rem);margin:0;color:var(--navy)}
+.quiz>p{margin:0;color:var(--muted)}
+.qitem{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.qitem blockquote{margin:0;font-weight:500}
+.qbtns{display:flex;gap:8px;flex-wrap:wrap}
+.qbtns button{font-family:var(--f-mono);font-size:.82rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 10px;cursor:pointer}
+.qbtns button:hover{border-color:var(--navy)}
+.qbtns button.right{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.qbtns button.wrong{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.fb{font-size:.88rem;margin:0;color:var(--muted)}
+.score{font-weight:600;color:var(--navy)}
+
+/* prompts à copier */
+.copy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.copy .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px;min-width:0;align-content:start}
+.copy h3{font-family:var(--f-display);font-size:1.05rem;margin:0}
+.copy .when{font-size:.85rem;color:var(--muted);margin:0}
+.copy pre{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--f-mono);font-size:.8rem;white-space:pre-wrap;overflow-x:auto}
+.copy .ctl{justify-self:start;flex:none;padding:7px 12px;font-size:.88rem}
+.copy .panel.wide{grid-column:1/-1;border:2px solid var(--navy)}
+.copy .step0{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+
+@media (max-width:760px){
+  .trio,.split,.mem-grid,.sw-grid,.rules2,.ab,.size,.copy,.duo2{grid-template-columns:minmax(0,1fr)}
+  .flow{grid-template-columns:minmax(0,1fr)}
+  .flow .arr{transform:rotate(90deg)}
+  .todo{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .desk{grid-template-columns:minmax(0,1fr)}
+  .controls{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .scene.on *{animation:none!important}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Le fichier DESIGN.md</h1>
+    <p>Demandez une page web à Claude sans consigne visuelle : vous obtenez le style par défaut de l'IA. En 11 étapes, avec une menuiserie fictive cliente d'une agence web, voici comment un fichier texte d'une page lui donne votre identité visuelle, à chaque fois.</p>
+  </header>
+
+  <section class="stage" aria-live="polite">
+
+    <!-- 1. Le problème -->
+    <div class="scene" data-i="0">
+      <div class="tag a">Le problème</div>
+      <p class="big a" style="--d:.1s">Trois clients différents, <em>une seule tête</em>.</p>
+      <div class="bub a" style="--d:.3s"><span class="who">Vous</span>Fais-moi la page d'accueil de mon client.</div>
+      <div class="trio">
+        <div class="mock generic a" style="--d:.7s"><div class="lbl">Restaurant</div><div class="m-nav"><b>🍝 Chez Lina</b></div><div class="m-hero"><div class="m-photo">photo de banque d'images</div><div><h4>Une expérience culinaire innovante ✨</h4><span class="m-btn">Réserver</span></div></div></div>
+        <div class="mock generic a" style="--d:1.1s"><div class="lbl">Cabinet comptable</div><div class="m-nav"><b>📊 Compta+</b></div><div class="m-hero"><div class="m-photo">photo de banque d'images</div><div><h4>Révolutionnez votre gestion ✨</h4><span class="m-btn">Commencer</span></div></div></div>
+        <div class="mock generic a" style="--d:1.5s"><div class="lbl">Menuiserie</div><div class="m-nav"><b>🚀 Atelier Noé</b></div><div class="m-hero"><div class="m-photo">photo de banque d'images</div><div><h4>Des solutions bois innovantes ✨</h4><span class="m-btn">Découvrir</span></div></div></div>
+      </div>
+      <div class="verdict a" style="--d:2.2s">Même dégradé violet · mêmes émojis · mêmes phrases creuses</div>
+    </div>
+
+    <!-- 2. La solution -->
+    <div class="scene" data-i="1">
+      <div class="tag a">La solution</div>
+      <p class="big a" style="--d:.1s">On décrit l'identité visuelle dans un fichier : <em>DESIGN.md</em>.</p>
+      <div class="split">
+        <div class="tree a" style="--d:.4s"><span>site-atelier-noe/</span>
+<span class="dim">├──</span> CLAUDE.md
+<span class="dim">├──</span> MEMORY.md
+<span class="dim">├──</span> <span class="hot">DESIGN.md</span>   <span class="dim">← la charte</span>
+<span class="dim">├──</span> images/
+<span class="dim">└──</span> pages/</div>
+        <div class="files3">
+          <div class="a" style="--d:.8s"><b>CLAUDE.md</b><span><strong>Comment</strong> travailler : les règles.</span></div>
+          <div class="a" style="--d:1.1s"><b>MEMORY.md</b><span><strong>Où on en est</strong> : le carnet de bord.</span></div>
+          <div class="me a" style="--d:1.4s"><b>DESIGN.md</b><span><strong>À quoi ça ressemble</strong> : la charte graphique.</span></div>
+          <div class="analogy a" style="--d:2s"><b>Comparaison</b>C'est la charte graphique qu'on remet à un graphiste indépendant le premier jour, mais rédigée pour une IA.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Le contenu -->
+    <div class="scene" data-i="2">
+      <div class="tag a">Le contenu</div>
+      <p class="big a" style="--d:.1s">Six rubriques, <em>une page</em> au maximum.</p>
+      <div class="mem-grid">
+        <div class="file a" style="--d:.3s">
+          <div class="win-h"><i></i><i></i><i></i>DESIGN.md</div>
+          <div class="body">
+            <div class="ln h1 a" style="--d:.4s"># DESIGN.md · Atelier Noé</div>
+            <div class="ln h2 a" style="--d:.6s">## Identité</div>
+            <div class="ln a" style="--d:.7s">Menuiserie artisanale. Ton chaleureux et précis.</div>
+            <div class="ln h2 a" style="--d:1s">## Couleurs</div>
+            <div class="ln a" style="--d:1.1s">- Fond : crème #F6F1E7 · Texte : brun #2B1D14</div>
+            <div class="ln a" style="--d:1.2s">- Accent (boutons) : vert sapin #2F5D50</div>
+            <div class="ln h2 a" style="--d:1.5s">## Typographie</div>
+            <div class="ln a" style="--d:1.6s">- Titres : Fraunces · Texte : IBM Plex Sans</div>
+            <div class="ln h2 a" style="--d:1.9s">## Mise en page</div>
+            <div class="ln a" style="--d:2s">- Beaucoup d'espace, grandes photos d'atelier</div>
+            <div class="ln h2 a" style="--d:2.3s">## Composants</div>
+            <div class="ln a" style="--d:2.4s">- Bouton : vert sapin, coins peu arrondis (4 px)</div>
+            <div class="ln h2 a" style="--d:2.7s">## Toujours / Jamais</div>
+            <div class="ln a" style="--d:2.8s">- Jamais de dégradé violet ni d'émoji</div>
+          </div>
+        </div>
+        <div class="rub">
+          <div class="a" style="--d:.7s"><span>Identité</span>Qui est la marque, pour qui, sur quel ton.</div>
+          <div class="a" style="--d:1.1s"><span>Couleurs</span>Chaque couleur avec son code et son rôle.</div>
+          <div class="a" style="--d:1.6s"><span>Typographie</span>Deux polices au plus : titres et texte.</div>
+          <div class="a" style="--d:2s"><span>Mise en page</span>L'espace, les images, la densité.</div>
+          <div class="a" style="--d:2.4s"><span>Composants</span>Les éléments qui reviennent : boutons, cartes.</div>
+          <div class="a" style="--d:2.8s"><span>Toujours / Jamais</span>Les garde-fous contre le style par défaut.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Un rôle par couleur (interactif) -->
+    <div class="scene" data-i="3" id="s4">
+      <div class="tag a">Les couleurs</div>
+      <p class="big a" style="--d:.1s">Un code ne suffit pas : donnez à chaque couleur <em>un rôle</em>.</p>
+      <div class="sw-grid">
+        <div class="swatches a" style="--d:.3s">
+          <button class="sw" type="button" data-r="fond" aria-pressed="false"><i style="background:#F6F1E7"></i><span><b>Fond</b><small>crème · #F6F1E7</small></span></button>
+          <button class="sw" type="button" data-r="texte" aria-pressed="false"><i style="background:#2B1D14"></i><span><b>Texte</b><small>brun foncé · #2B1D14</small></span></button>
+          <button class="sw" type="button" data-r="accent" aria-pressed="false"><i style="background:#2F5D50"></i><span><b>Accent</b><small>vert sapin · #2F5D50</small></span></button>
+          <button class="sw" type="button" data-r="bois" aria-pressed="false"><i style="background:#8A5A3B"></i><span><b>Détails</b><small>noyer · #8A5A3B</small></span></button>
+        </div>
+        <div style="display:grid;gap:10px">
+          <div class="mock brand a" style="--d:.6s" data-r="fond">
+            <div class="m-nav"><b data-r="bois">Atelier Noé</b><span data-r="texte">Réalisations · Atelier · Contact</span></div>
+            <div class="m-hero"><div class="m-photo" data-r="bois">photo de l'atelier</div><div><h4 data-r="texte">Des meubles faits pour durer.</h4><p data-r="texte">Sur mesure, à la main, depuis 1998.</p><span class="m-btn" data-r="accent">Demander un devis</span></div></div>
+          </div>
+          <div class="hl-cap" id="cap">Cliquez sur une couleur pour voir où elle sert.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Toujours / Jamais -->
+    <div class="scene" data-i="4">
+      <div class="tag a">Les garde-fous</div>
+      <p class="big a" style="--d:.1s">La rubrique la plus utile : <em>toujours / jamais</em>.</p>
+      <div class="rules2">
+        <div class="col a" style="--d:.4s"><h3>Toujours</h3><div>Vraies photos de l'atelier</div><div>Verbes concrets : fabriquer, poncer, livrer</div><div>Une seule couleur d'accent par écran</div><div>Textes courts sous les titres</div></div>
+        <div class="col no a" style="--d:.9s"><h3>Jamais</h3><div>Dégradés violets</div><div>Émojis dans les titres</div><div>Photos de banque d'images</div><div>« Solutions innovantes », « révolutionnez »</div></div>
+      </div>
+      <p class="why a" style="--d:1.6s">Sans ces interdits, Claude retombe sur ses habitudes. Chaque « jamais » vient d'un défaut déjà observé.</p>
+    </div>
+
+    <!-- 6. Le brancher -->
+    <div class="scene" data-i="5">
+      <div class="tag a">Le branchement</div>
+      <p class="big a" style="--d:.1s">Une ligne dans CLAUDE.md, et Claude <em>le lit à chaque visuel</em>.</p>
+      <div class="flow">
+        <div class="box a" style="--d:.3s"><b>Votre demande</b>« Crée la page Contact »</div>
+        <div class="arr a" style="--d:.6s">→</div>
+        <div class="box a" style="--d:.8s"><b>CLAUDE.md</b>« Avant tout visuel, lis DESIGN.md »</div>
+        <div class="arr a" style="--d:1.1s">→</div>
+        <div class="box lime a" style="--d:1.3s"><b>DESIGN.md</b>Couleurs, polices, garde-fous appliqués</div>
+      </div>
+      <div class="cmd a" style="--d:1.8s">Avant de produire un visuel (page web, affiche, slide), lis DESIGN.md et respecte-le.
+Si ma demande le contredit, signale-le avant de produire.</div>
+    </div>
+
+    <!-- 7. Navigateur / Cowork : la personnalisation -->
+    <div class="scene" data-i="6">
+      <div class="tag a">Navigateur ou Cowork · personnalisation</div>
+      <p class="big a" style="--d:.1s">En ligne, DESIGN.md est une <em>copie posée dans le projet</em>.</p>
+      <div class="duo2">
+        <div class="app a" style="--d:.3s">
+          <div class="win-h"><i></i><i></i><i></i>claude.ai · Projet « Atelier Noé »</div>
+          <div class="app-b">
+            <div class="field a" style="--d:.6s"><span class="fl">Instructions</span><span class="fv">Avant de produire un visuel, applique DESIGN.md (dans le Contexte)…</span></div>
+            <div class="field a" style="--d:1s"><span class="fl">Contexte</span><span class="fv"><span class="chip">📄 DESIGN.md · copie</span> <span class="chip">📄 brief-client.md</span></span></div>
+            <div class="field a" style="--d:1.4s"><span class="fl">Personnalisation → Skills</span><span class="fv">facultatif</span></div>
+            <div class="bub a" style="--d:2s"><span class="who">Vous</span>Prépare la présentation pour Atelier Noé.</div>
+            <div class="bub ai a" style="--d:2.7s"><span class="who">Claude</span>J'applique DESIGN.md, déjà présent dans le projet : vert sapin pour les boutons, Fraunces pour les titres… Voici le plan.</div>
+            <div class="out a" style="--d:3.4s">⬇ presentation-atelier-noe.pptx · à télécharger</div>
+          </div>
+        </div>
+        <div class="pts">
+          <div class="pt a" style="--d:1s"><b>Toujours là</b>Le fichier est dans le contexte de chaque conversation du projet.</div>
+          <div class="pt a" style="--d:1.6s"><b>Une copie</b>Vous modifiez DESIGN.md ? Supprimez l'ancien et téléversez le nouveau.</div>
+          <div class="pt warn a" style="--d:2.2s"><b>Vérification limitée</b>Claude contrôle surtout le contenu : il ne peut pas toujours ouvrir le fichier produit pour le regarder.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. En local : DESIGN.md convoqué -->
+    <div class="scene" data-i="7">
+      <div class="tag a">En local · Cowork sur un dossier ou Claude Code</div>
+      <p class="big a" style="--d:.1s">En local, DESIGN.md est <em>convoqué</em> au moment où il sert.</p>
+      <div class="duo2">
+        <div class="log a" style="--d:.3s">
+          <div class="win-h"><i></i><i></i><i></i>site-atelier-noe/ · ce que fait le harnais</div>
+          <ol>
+            <li class="a" style="--d:.5s"><span class="ic">auto</span><span>Lit <code>CLAUDE.md</code> au démarrage</span></li>
+            <li class="you a" style="--d:1s"><span class="ic">vous</span><span>« Prépare la présentation pour Atelier Noé »</span></li>
+            <li class="hot a" style="--d:1.5s"><span class="ic">lire</span><span>Ouvre <code>DESIGN.md</code>, la règle de CLAUDE.md l'exige</span></li>
+            <li class="a" style="--d:2s"><span class="ic">lire</span><span>Ouvre <code>brief-client.md</code></span></li>
+            <li class="you a" style="--d:2.5s"><span class="ic">vous</span><span>Valide le plan en 10 diapositives</span></li>
+            <li class="a" style="--d:3s"><span class="ic">écrire</span><span>Crée <code>sorties/presentation.pptx</code></span></li>
+            <li class="a" style="--d:3.5s"><span class="ic">voir</span><span>Ouvre la présentation, regarde chaque diapositive</span></li>
+            <li class="bad a" style="--d:4s"><span class="ic">tour 1</span><span>2 écarts : un dégradé, une police par défaut → corrige</span></li>
+            <li class="good a" style="--d:4.6s"><span class="ic">tour 2</span><span>Toutes les règles respectées → bilan et livraison</span></li>
+          </ol>
+        </div>
+        <div class="pts">
+          <div class="pt a" style="--d:1.5s"><b>Lu au bon moment</b>Le fichier n'entre dans le contexte que pour un visuel, pas pour un e-mail.</div>
+          <div class="pt a" style="--d:2.2s"><b>Toujours à jour</b>Claude lit le vrai fichier : modifiez-le, c'est pris en compte tout de suite.</div>
+          <div class="pt ok a" style="--d:4.6s"><b>Vraie boucle</b>Claude regarde ce qu'il a produit et compare à DESIGN.md jusqu'à « terminé ».</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Avant / après (interactif) -->
+    <div class="scene" data-i="8">
+      <div class="tag a">Le test</div>
+      <p class="big a" style="--d:.1s">Même demande, <em>avec et sans</em> le fichier.</p>
+      <div class="toggle a" style="--d:.3s" role="group" aria-label="Comparer">
+        <button type="button" id="tBefore" aria-pressed="true">Sans DESIGN.md</button>
+        <button type="button" id="tAfter" aria-pressed="false">Avec DESIGN.md</button>
+      </div>
+      <div class="ab a" style="--d:.5s" id="ab">
+        <div>
+          <div class="mock generic"><div class="m-nav"><b>🚀 Atelier Noé</b><span>Accueil · Services · Contact</span></div><div class="m-hero"><div class="m-photo">photo de banque d'images</div><div><h4>Des solutions bois innovantes ✨</h4><p>Révolutionnez votre intérieur.</p><span class="m-btn">Découvrir</span></div></div></div>
+          <div class="mock brand"><div class="m-nav"><b>Atelier Noé</b><span>Réalisations · Atelier · Contact</span></div><div class="m-hero"><div class="m-photo">photo de l'atelier</div><div><h4>Des meubles faits pour durer.</h4><p>Sur mesure, à la main, depuis 1998.</p><span class="m-btn">Demander un devis</span></div></div></div>
+        </div>
+        <div class="checks">
+          <div>Couleurs de la marque <span class="t-before">: absentes</span><span class="t-after">: respectées</span></div>
+          <div>Polices <span class="t-before">: celles par défaut</span><span class="t-after">: Fraunces + Plex</span></div>
+          <div>Photos <span class="t-before">: banque d'images</span><span class="t-after">: l'atelier</span></div>
+          <div>Ton <span class="t-before">: phrases creuses</span><span class="t-after">: concret</span></div>
+          <div>Émojis <span class="t-before">: présents</span><span class="t-after">: aucun</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Court plutôt que long -->
+    <div class="scene" data-i="9">
+      <div class="tag a">Le piège</div>
+      <p class="big a" style="--d:.1s">Une page qui sert vaut mieux que <em>cinquante pages</em> qui noient.</p>
+      <div class="size">
+        <div class="col no a" style="--d:.4s"><h3>Charte de 50 pages</h3><div class="meter"><i></i></div><div>Claude dilue l'essentiel, oublie des règles, remplit sa fenêtre de contexte.</div></div>
+        <div class="col short a" style="--d:.8s"><h3>DESIGN.md d'une page</h3><div class="meter"><i></i></div><div>Six rubriques, des règles vérifiables, mises à jour quand un défaut revient.</div></div>
+      </div>
+      <p class="quote a" style="--d:1.4s">Test pour chaque ligne : « Puis-je vérifier sur le visuel qu'elle est respectée ? » Non → elle est trop vague, réécrivez-la ou retirez-la.</p>
+    </div>
+
+    <!-- 11. À vous -->
+    <div class="scene" data-i="10">
+      <div class="tag a">À vous</div>
+      <p class="big a" style="--d:.1s">Quatre étapes pour <em>votre</em> DESIGN.md.</p>
+      <div class="todo">
+        <div class="a" style="--d:.3s"><b>1</b>Rassemblez l'existant : logo, charte, captures du site.</div>
+        <div class="a" style="--d:.6s"><b>2</b>Faites rédiger le fichier par Claude avec le prompt d'installation.</div>
+        <div class="a" style="--d:.9s"><b>3</b>Branchez-le : champs Instructions et Contexte en ligne, ou bloc « Visuels » dans CLAUDE.md en local.</div>
+        <div class="a" style="--d:1.2s"><b>4</b>Testez avant / après, puis corrigez le fichier.</div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="desk">
+    <div class="narr">
+      <div class="eyebrow" id="eb">Étape 1 sur 11</div>
+      <h2 id="nt"></h2>
+      <div id="nx"></div>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <button class="ctl" type="button" id="prev">← Précédent</button>
+        <button class="ctl primary" type="button" id="next">Suivant →</button>
+      </div>
+      <div class="row">
+        <button class="ctl" type="button" id="replay">↻ Rejouer</button>
+        <button class="ctl" type="button" id="auto">▶ Lecture auto</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Flèches ← → du clavier</div>
+    </div>
+  </section>
+
+  <section class="quiz" id="quiz">
+    <h2>Exercice : dans quel fichier ?</h2>
+    <p>Pour chaque consigne, choisissez le fichier où elle doit être rangée. <span class="score" id="score"></span></p>
+  </section>
+
+  <section class="copy">
+    <div class="panel wide">
+      <span class="step0">Étape 2 · une seule fois par marque</span>
+      <h3>Prompt d'installation : construire DESIGN.md avec Claude</h3>
+      <p class="when">Joignez si possible le logo, la charte ou des captures du site existant. Avec Claude Code ou Cowork, Claude crée le fichier dans votre dossier après validation. Dans claude.ai, il vous l'affiche : ajoutez-le aux connaissances de votre projet.</p>
+      <pre id="p0">Je veux créer un fichier DESIGN.md qui décrit l'identité visuelle de [nom de la marque], pour que tu l'appliques à chaque visuel (page web, affiche, slide).
+
+Procède ainsi :
+1. Si je t'ai joint une charte, un logo ou des captures, pars d'abord de ces documents.
+2. Pose-moi ensuite des questions simples, une par une, 8 au maximum, sur ce qui manque :
+   - l'activité, le public et le ton ;
+   - les couleurs (avec leurs codes si je les ai) ;
+   - les polices ;
+   - le style des images ;
+   - ce qu'il faut toujours faire et ne jamais faire.
+3. Rédige un DESIGN.md d'une page au maximum, avec les rubriques : Identité, Couleurs, Typographie, Mise en page, Composants, Toujours / Jamais.
+4. Donne un rôle à chaque couleur (fond, texte, accent, détails), pas seulement un code.
+5. Écris des règles vérifiables sur un visuel. Pas de formule vague comme « moderne et élégant ».
+6. N'invente aucun code couleur ni aucune police : si je ne sais pas, propose deux options marquées « à valider ».
+7. N'enregistre rien avant que je dise « je valide ».</pre>
+      <button class="ctl" type="button" data-copy="p0">Copier</button>
+    </div>
+    <div class="panel">
+      <span class="step0">Étape 3 · à coller dans CLAUDE.md</span>
+      <h3>Le bloc « Visuels »</h3>
+      <p class="when">En local, dans CLAUDE.md. En ligne, dans le champ Instructions du projet (DESIGN.md étant téléversé dans Contexte).</p>
+      <pre id="p1">## Visuels
+- Avant de produire un visuel (page web, affiche, slide), lis DESIGN.md.
+- Si ma demande contredit DESIGN.md, signale-le avant de produire.
+- Avant de livrer, vérifie le visuel règle par règle contre DESIGN.md
+  (ouvre-le et regarde-le si tu en as les outils), corrige, 3 tours max.
+- Termine par un bilan : règles respectées, écarts restants, règles trop vagues.
+- Si une décision change l'identité visuelle, note-la dans MEMORY.md
+  et propose la mise à jour de DESIGN.md.</pre>
+      <button class="ctl" type="button" data-copy="p1">Copier</button>
+    </div>
+    <div class="panel">
+      <span class="step0">Étape 4 · après chaque visuel important</span>
+      <h3>Le contrôle de conformité</h3>
+      <p class="when">C'est la boucle de vérification, appliquée au visuel : Claude se relit règle par règle.</p>
+      <pre id="p2">Compare ce visuel à DESIGN.md, règle par règle.
+Pour chaque règle : respectée, non respectée ou non applicable.
+Corrige ce qui n'est pas respecté, puis revérifie. Trois tours au maximum.
+Termine par un bilan : corrections faites, règles de DESIGN.md trop vagues à réécrire.</pre>
+      <button class="ctl" type="button" data-copy="p2">Copier</button>
+    </div>
+    <div class="panel wide">
+      <span class="step0">Exemple d'usage · une présentation client</span>
+      <h3>Prompt : une présentation qui applique DESIGN.md</h3>
+      <p class="when">Remplacez ce qui est entre [crochets]. En local, lancez-le dans le dossier du client. En ligne, DESIGN.md et les sources doivent être dans le Contexte du projet : la vérification portera alors surtout sur le contenu. Si votre CLAUDE.md contient déjà le bloc « Visuels », vous pouvez retirer &lt;verification&gt; et le point 5.</p>
+      <pre id="p3">&lt;role&gt;
+Tu es un concepteur de présentations commerciales dans une agence web. Tu appliques
+la charte graphique de chaque client avec rigueur.
+&lt;/role&gt;
+
+&lt;contexte&gt;
+Je prépare une présentation pour [nom du client] : [objet, ex. « proposition de refonte
+de son site »]. Elle sera projetée en rendez-vous devant [public], pendant [durée].
+Objectif : [ce que le client doit décider à la fin, ex. « valider le devis »].
+
+L'identité visuelle du client est décrite dans DESIGN.md. Ce fichier passe avant tes
+habitudes de mise en forme. Le client doit reconnaître sa marque dès la première
+diapositive. Une présentation au style générique donne l'impression d'un modèle
+recyclé et fait perdre la confiance du client.
+&lt;/contexte&gt;
+
+&lt;sources&gt;
+- DESIGN.md : couleurs, polices, mise en page, règles « toujours / jamais ».
+- [ex. brief-client.md, compte-rendu-rdv.md, devis.pdf] : le contenu de la présentation.
+&lt;/sources&gt;
+
+&lt;instructions&gt;
+1. Lis DESIGN.md en entier avant toute chose. Résume-moi en 5 lignes les règles que tu
+   vas appliquer (couleurs et leur rôle, polices, garde-fous).
+2. Lis les sources. Tout fait, chiffre ou prix de la présentation doit en venir.
+   S'il manque une information, écris [À COMPLÉTER] au lieu de l'inventer.
+3. Propose-moi d'abord le plan : 8 à 12 diapositives, avec pour chacune un titre et
+   le message clé en une phrase. Attends ma validation avant de produire.
+4. Produis la présentation :
+   - une idée par diapositive, un titre qui énonce le message (pas un simple thème) ;
+   - 30 mots au maximum par diapositive, le détail dans les notes de l'orateur ;
+   - les couleurs, les polices et les composants exactement comme dans DESIGN.md ;
+   - un emplacement marqué [IMAGE : description] là où une vraie photo du client
+     est nécessaire, au lieu d'une image de banque d'images.
+5. Si une de mes demandes contredit DESIGN.md, signale-le-moi avant de produire et
+   laisse-moi trancher.
+&lt;/instructions&gt;
+
+&lt;verification&gt;
+Avant de me livrer la présentation, ouvre-la et regarde chaque diapositive si tu en
+as les outils. Compare-la à DESIGN.md, règle par règle : respectée, non respectée ou
+non applicable. Corrige ce qui n'est pas respecté, puis revérifie. Trois tours au maximum.
+&lt;/verification&gt;
+
+&lt;format_de_sortie&gt;
+- Fichier : [presentation-client.pptx, ou présentation HTML d'une seule page].
+- Puis un bilan en trois parties :
+  1. les règles de DESIGN.md appliquées ;
+  2. les écarts restants et leur raison ;
+  3. les points [À COMPLÉTER] et les informations à confirmer avec moi.
+&lt;/format_de_sortie&gt;</pre>
+      <button class="ctl" type="button" data-copy="p3">Copier</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const N=[
+  {t:"Le style par défaut de l'IA",
+   x:`<p>Sans consigne visuelle, Claude ne devine pas l'identité de votre client. Il produit ce qu'il a vu le plus souvent : dégradés, émojis, phrases passe-partout.</p><p class="key">Le résultat n'est pas faux. Il est interchangeable : on pourrait changer le nom du client sans rien changer d'autre.</p>`},
+  {t:"Un troisième fichier dans le dossier",
+   x:`<p>Vous connaissez déjà CLAUDE.md (les règles) et MEMORY.md (le carnet). DESIGN.md s'ajoute à côté, pour tout ce qui concerne <strong>l'apparence</strong>.</p><p>C'est un simple fichier texte au format Markdown : pas de logiciel, pas de skill à installer.</p><p class="warn">Ce n'est pas un standard officiel d'Anthropic : le nom s'est répandu avec les outils de design par IA, et chaque outil a sa variante. Le principe, lui, est toujours le même.</p>`},
+  {t:"Ce qu'on écrit dedans",
+   x:`<p>Six rubriques suffisent. Chaque ligne est une consigne courte que Claude peut appliquer, et que vous pouvez vérifier.</p><p class="key">Une charte de 50 pages existe déjà ? Ne la copiez pas : demandez à Claude d'en extraire une page.</p>`},
+  {t:"Un rôle pour chaque couleur",
+   x:`<p>« #2F5D50 » ne dit pas à Claude quoi en faire. « Accent (boutons) : vert sapin #2F5D50 » lui dit où le mettre, et donc où ne pas le mettre.</p><p>Cliquez sur les couleurs dans l'animation pour voir chaque rôle sur la maquette.</p><p class="key">Règle simple : fond, texte, accent, détails. Quatre rôles couvrent la plupart des besoins.</p>`},
+  {t:"Les garde-fous",
+   x:`<p>La rubrique « Toujours / Jamais » est celle qui change le plus le résultat. Elle bloque les réflexes de l'IA avant même qu'elle produise.</p><p>Elle s'enrichit avec le temps : chaque fois qu'un défaut revient, ajoutez un « jamais ».</p>`},
+  {t:"Brancher le fichier",
+   x:`<p>Un fichier que personne ne lit ne sert à rien. Une ligne dans CLAUDE.md suffit pour que Claude le consulte avant chaque visuel.</p><p>Cette consigne se pose de deux façons selon l'endroit où vous travaillez : dans les champs de personnalisation (navigateur ou Cowork), ou dans un dossier local. Les deux étapes suivantes les comparent.</p><p class="key">La deuxième phrase compte : si vous demandez « un bouton rouge », Claude doit vous signaler le conflit plutôt que de trancher seul.</p>`},
+  {t:"Dans le navigateur ou Cowork : la personnalisation",
+   x:`<p>Sur claude.ai, ou dans Cowork quand vous passez par les champs du projet, vous <strong>remplissez des champs</strong> : la consigne va dans <strong>Instructions</strong>, et DESIGN.md est téléversé dans <strong>Contexte</strong>.</p><p>Claude a donc la charte sous les yeux dans chaque conversation du projet, sans rien demander. En contrepartie, c'est une <strong>copie</strong> : si vous modifiez le fichier sur votre ordinateur, il faut la remplacer.</p><p class="warn">Le nom et l'emplacement exacts des champs varient selon les versions de l'app : vérifiez dans la vôtre.</p>`},
+  {t:"En local : DESIGN.md est convoqué",
+   x:`<p>Quand Claude travaille dans un <strong>dossier</strong> (Cowork sur un dossier, ou Claude Code), il lit CLAUDE.md automatiquement, mais <strong>pas</strong> DESIGN.md. C'est la règle de CLAUDE.md qui le convoque, au moment où un visuel est demandé.</p><p>C'est le harnais au travail : Claude lit les fichiers, écrit la présentation dans <code>sorties/</code>, la regarde, la compare à DESIGN.md et corrige, jusqu'à ce que toutes les règles soient respectées.</p><p class="key">Avec Claude Code, on peut aussi écrire <code>@DESIGN.md</code> dans CLAUDE.md : le fichier est alors chargé à chaque session. Utile si le projet ne fait que du visuel ; sinon, la consigne de lecture coûte moins de contexte.</p>`},
+  {t:"Le test avant / après",
+   x:`<p>Basculez entre « Sans » et « Avec » dans l'animation. Même demande, même modèle : seul le fichier change.</p><p class="key">Faites ce test vous-même avec le prompt « Contrôle de conformité » plus bas. C'est le meilleur moyen de voir ce qui manque encore dans votre DESIGN.md.</p>`},
+  {t:"Court plutôt que long",
+   x:`<p>Plus le fichier est long, plus les règles importantes se perdent, et plus il occupe la fenêtre de contexte.</p><p>Visez une page. Une règle qu'on ne peut pas vérifier sur le visuel (« élégant », « moderne ») est trop vague : remplacez-la par quelque chose de concret.</p>`},
+  {t:"À vous de jouer",
+   x:`<p>Quatre étapes, et chaque nouveau visuel part de votre identité au lieu du style par défaut.</p><p>Le prompt d'installation, le bloc « Visuels » pour CLAUDE.md, le contrôle de conformité et un prompt complet de présentation client sont plus bas, prêts à copier. Avant, testez-vous avec l'exercice « Dans quel fichier ? ».</p><p><strong>Pour une agence :</strong> un DESIGN.md par client, rangé dans le dossier de chaque client.</p>`}
+];
+const scenes=[...document.querySelectorAll('.scene')];
+const eb=document.getElementById('eb'),nt=document.getElementById('nt'),nx=document.getElementById('nx');
+const prev=document.getElementById('prev'),next=document.getElementById('next'),autoB=document.getElementById('auto');
+const dots=document.getElementById('dots');
+let cur=0,timer=null;const seen=new Set();
+N.forEach((n,i)=>{const b=document.createElement('button');b.className='dot';b.type='button';b.textContent=i+1;b.setAttribute('aria-label','Étape '+(i+1)+' : '+n.t);b.onclick=()=>{stopAuto();go(i)};dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(N.length-1,i));seen.add(cur);
+  scenes.forEach(s=>s.classList.remove('on'));
+  void scenes[cur].offsetWidth;
+  scenes[cur].classList.add('on');
+  eb.textContent='Étape '+(cur+1)+' sur '+N.length;nt.textContent=N[cur].t;nx.innerHTML=N[cur].x;
+  prev.disabled=cur===0;next.disabled=cur===N.length-1;
+  [...dots.children].forEach((d,k)=>{d.classList.toggle('cur',k===cur);d.classList.toggle('seen',seen.has(k)&&k!==cur)});
+}
+function stopAuto(){clearInterval(timer);timer=null;autoB.textContent='▶ Lecture auto'}
+prev.onclick=()=>{stopAuto();go(cur-1)};
+next.onclick=()=>{stopAuto();go(cur+1)};
+document.getElementById('replay').onclick=()=>go(cur);
+autoB.onclick=()=>{
+  if(timer){stopAuto();return}
+  if(cur===N.length-1)go(0);
+  autoB.textContent='❚❚ Pause';
+  timer=setInterval(()=>{if(cur>=N.length-1){stopAuto();return}go(cur+1)},11000);
+};
+document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('.quiz'))return;
+  if(e.key==='ArrowRight'){stopAuto();go(cur+1)}
+  if(e.key==='ArrowLeft'){stopAuto();go(cur-1)}
+});
+
+/* étape 4 : nuancier */
+const roles={fond:"le <strong>fond</strong> de toute la page",texte:"les <strong>titres et le texte</strong>",accent:"<strong>uniquement les boutons</strong> : c'est ce qui attire l'œil vers l'action",bois:"le <strong>nom de la marque</strong> et les détails"};
+const s4=document.getElementById('s4'),cap=document.getElementById('cap');
+s4.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{
+  const r=b.dataset.r;
+  s4.querySelectorAll('.sw').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  s4.querySelectorAll('.mock [data-r], .mock[data-r]').forEach(el=>el.classList.toggle('hl',el.dataset.r===r));
+  cap.innerHTML='Cette couleur sert pour '+roles[r]+'.';
+});
+
+/* étape 7 : avant / après */
+const ab=document.getElementById('ab'),tB=document.getElementById('tBefore'),tA=document.getElementById('tAfter');
+function setAB(after){ab.classList.toggle('after',after);tA.setAttribute('aria-pressed',after);tB.setAttribute('aria-pressed',!after)}
+tB.onclick=()=>{stopAuto();setAB(false)};tA.onclick=()=>{stopAuto();setAB(true)};
+
+/* exercice */
+const Q=[
+  ["Réponds toujours en français, avec des phrases simples.","CLAUDE.md","C'est une règle de travail, stable d'un projet à l'autre."],
+  ["Les boutons sont en vert sapin #2F5D50.","DESIGN.md","C'est une règle d'apparence propre à la marque."],
+  ["Le client a validé la maquette de la page Contact le 12 mars.","MEMORY.md","C'est un état d'avancement : il changera à la prochaine session."],
+  ["Jamais de dégradé violet ni d'émoji dans les titres.","DESIGN.md","C'est un garde-fou visuel : rubrique Toujours / Jamais."],
+  ["Avant tout visuel, lis DESIGN.md.","CLAUDE.md","C'est une règle de fonctionnement : elle dit à Claude quand ouvrir DESIGN.md."],
+  ["Prochaine étape : la page Réalisations.","MEMORY.md","C'est le carnet de bord du projet."]
+];
+const quiz=document.getElementById('quiz'),score=document.getElementById('score');let ok=0,done=0;
+Q.forEach(([s,ans,why])=>{
+  const d=document.createElement('div');d.className='qitem';
+  d.innerHTML='<blockquote>« '+s+' »</blockquote><div class="qbtns"></div><p class="fb"></p>';
+  const bs=d.querySelector('.qbtns'),fb=d.querySelector('.fb');
+  ["CLAUDE.md","MEMORY.md","DESIGN.md"].forEach(f=>{
+    const b=document.createElement('button');b.type='button';b.textContent=f;
+    b.onclick=()=>{
+      if(d.dataset.done)return;d.dataset.done=1;done++;
+      if(f===ans){ok++;b.classList.add('right');fb.textContent='Exact. '+why}
+      else{b.classList.add('wrong');[...bs.children].find(x=>x.textContent===ans).classList.add('right');fb.textContent='Plutôt '+ans+'. '+why}
+      score.textContent=ok+' / '+done+(done===Q.length?' · terminé':'');
+    };
+    bs.appendChild(b);
+  });
+  quiz.appendChild(d);
+});
+
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
+  const t=document.getElementById(b.dataset.copy).textContent;
+  try{await navigator.clipboard.writeText(t);b.textContent='Copié ✓'}
+  catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById(b.dataset.copy));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Texte sélectionné'}
+  setTimeout(()=>b.textContent='Copier',2000);
+});
+go(0);
+</script>
+<a href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:9999;font:600 14px system-ui,sans-serif;background:#0f2a7a;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">← Menu</a>
