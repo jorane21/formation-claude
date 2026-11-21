@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Créer son premier agent avec ADK</title>
+<style>
+/* Charte : Akyos Design System (tokens.json). Pangram non fourni : repli system-ui. */
+:root{
+  --blue-900:#001662; --blue-800:#041a71; --blue-700:#0a1f8a; --blue-500:#0971ce; --blue-100:#e6f0fb; --blue-50:#f7fafd;
+  --coral:#cc3449; --coral-100:#fbe8ea; --lime:#ddff00; --white:#ffffff; --fond-blanc:#fafafd;
+  --ink-900:#14172b; --ink-700:#3c4058; --ink-500:#6b6f87; --ink-100:#e3e5ec; --ink-50:#f4f5f8;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:20px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(20,23,43,.06); --shadow-md:0 8px 24px rgba(20,23,43,.10);
+  --font:"Pangram",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond-blanc);color:var(--ink-900);font-family:var(--font);font-size:1rem;line-height:1.55}
+.hero{background:var(--blue-900);color:var(--white);padding:48px 24px 40px}
+.hero .in,.wrap{max-width:960px;margin:0 auto}
+.hero .kicker{display:inline-block;background:var(--lime);color:var(--ink-900);font-size:.75rem;font-weight:700;letter-spacing:.02em;padding:4px 12px;border-radius:var(--radius-pill)}
+.hero h1{font-size:clamp(2rem,5vw,3rem);line-height:1.1;font-weight:800;margin:16px 0 8px}
+.hero p{margin:0;max-width:62ch;font-size:1.125rem;font-weight:500;color:#d6dcf0}
+.wrap{padding:32px 24px 96px;display:grid;gap:24px}
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border-radius:var(--radius-pill);transition:background 160ms var(--ease),color 160ms var(--ease),border-color 160ms var(--ease),transform 120ms var(--ease)}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:2px solid var(--blue-500);outline-offset:2px}
+.tab{background:var(--white);color:var(--ink-700);border:1.5px solid var(--ink-100);padding:8px 16px;font-size:.875rem;font-weight:500}
+.tab:hover{border-color:var(--blue-900);color:var(--blue-900)}
+.tab.on{background:var(--blue-900);border-color:var(--blue-900);color:var(--white)}
+.btn{background:var(--blue-900);color:var(--white);border:0;padding:12px 24px;font-weight:700}
+.btn:hover{background:var(--blue-800)}
+.btn.ghost{background:transparent;color:var(--blue-900);border:1.5px solid var(--ink-100);font-weight:500}
+.btn.ghost:hover{border-color:var(--blue-900)}
+.chip{background:var(--white);color:var(--ink-700);border:1.5px solid var(--ink-100);padding:8px 16px;font-size:.875rem;font-weight:500}
+.chip:hover{border-color:var(--blue-900)}
+.chip.on{background:var(--blue-100);border-color:var(--blue-900);color:var(--blue-900)}
+.card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:32px;min-height:440px}
+.card h2{font-size:1.75rem;line-height:1.3;font-weight:700;margin:0 0 8px;color:var(--blue-900)}
+.lead{color:var(--ink-500);margin:0 0 16px;max-width:70ch}
+.lead b,.out b{font-weight:700;color:var(--ink-900)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0}
+.node{background:var(--blue-50);color:var(--blue-900);border:1.5px solid var(--ink-100);border-radius:var(--radius-md);padding:10px 16px;font-weight:700;font-size:.95rem;transition:background 200ms var(--ease),color 200ms var(--ease),border-color 200ms var(--ease)}
+.node small{display:block;font-weight:400;font-size:.8rem;color:var(--ink-500)}
+.node.hot{background:var(--blue-900);border-color:var(--blue-900);color:var(--white)}
+.node.hot small{color:#d6dcf0}
+.node.ok{background:var(--blue-100);border-color:var(--blue-900)}
+.node.ok::after{content:" ✓";color:var(--blue-900)}
+.node.ko{background:var(--coral-100);border-color:var(--coral);color:var(--coral)}
+.arrow{color:var(--ink-500);font-size:1.1rem}
+.log{font-family:var(--mono);font-size:.875rem;background:var(--ink-50);border-radius:var(--radius-md);padding:12px 16px;min-height:52px;white-space:pre-wrap;line-height:1.6;color:var(--ink-900)}
+.out{background:var(--ink-50);border-radius:var(--radius-md);padding:16px;min-height:110px;font-size:.95rem}
+.out .k{color:var(--ink-500)}
+code{font-family:var(--mono);font-size:.875em;background:var(--blue-100);color:var(--blue-900);padding:1px 6px;border-radius:6px}
+.note{background:var(--blue-50);border-radius:var(--radius-md);padding:12px 16px;font-size:.875rem;color:var(--ink-700);margin-top:16px}
+.note.warn{background:var(--coral-100);color:var(--ink-900)}
+.note strong{color:var(--blue-900)}
+.note.warn strong{color:var(--coral)}
+.loop{border:1.5px dashed var(--ink-100);border-radius:var(--radius-md);padding:10px 16px;margin:10px 0}
+.loop>span{font-family:var(--mono);font-size:.75rem;color:var(--ink-500)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.02em;padding:6px 12px;border-radius:var(--radius-pill);background:var(--lime);color:var(--ink-900)}
+.ck{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ink-100);cursor:pointer;font-size:.95rem}
+.ck .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--ink-300,#a7abbd);flex:none;display:grid;place-items:center;font-size:.8rem;color:var(--white)}
+.ck.on .box{background:var(--blue-900);border-color:var(--blue-900)}
+.ck.on .box::after{content:"✓"}
+.ck.on span:last-child{color:var(--ink-500);text-decoration:line-through}
+.nav{display:flex;justify-content:space-between;align-items:center}
+.pos{font-size:.875rem;color:var(--ink-500)}
+.src{font-size:.875rem;color:var(--ink-500)}
+.src a{color:var(--blue-900)}
+.src a:hover{color:var(--blue-700)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="hero"><div class="in">
+  <span class="kicker">Construire un agent</span>
+  <h1>Créer son premier agent avec ADK</h1>
+  <p>Ce qu'est un agent, puis la construction d'un petit système qui rédige des articles de blog, avec ADK, le kit de Google. Six étapes, chacune avec une démonstration à lancer.</p>
+</div></header>
+
+<main class="wrap">
+  <nav class="steps" id="steps" aria-label="Étapes"></nav>
+  <section class="card" id="panel" aria-live="polite"></section>
+  <div class="nav"><button class="btn ghost" id="prev">← Précédent</button><span class="pos" id="pos"></span><button class="btn" id="next">Suivant →</button></div>
+  <p class="src">Source : la vidéo <a href="https://www.youtube.com/watch?v=Zqno_vux6d8">« AI agents explained: Build your first agent in 8 minutes »</a> et sa transcription. La vidéo se sert du kit de Google, mais rien n'indique qu'elle ait été publiée par Google. Elle ne montre pas non plus comment la réponse « OK » arrête la boucle (dans ADK, c'est en général un signal de sortie ou le nombre maximal de tentatives) : à vérifier dans le code joint à la vidéo.</p>
+</main>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const titles=["1. Agent ou chatbot","2. Trois familles","3. Les briques ADK","4. Fiche d'un agent","5. Deux boucles","6. Assembler et lancer"];
+const N=titles.length;let cur=0,run=0;const S=[];
+function pick(sel,data,out){$$(sel).forEach(b=>b.onclick=()=>{$$(sel).forEach(x=>x.classList.remove('on'));b.classList.add('on');$(out).innerHTML=data[b.dataset.k];});}
+
+S[0]=()=>`<h2>Un chatbot répond. Un agent décide et agit.</h2>
+<p class="lead">Un chatbot produit une réponse d'un seul coup. Un agent examine la demande, trouve les étapes à suivre, utilise des outils (un service en ligne, du code), regarde le résultat et choisit la suite. Ce cycle vient d'un article de recherche intitulé <b>ReAct</b> (raisonner + agir).</p>
+<div class="row" id="react"><span class="node">Raisonner</span><span class="arrow">→</span><span class="node">Agir</span><span class="arrow">→</span><span class="node">Observer</span><span class="arrow">→</span><span class="node">Ajuster</span><span class="arrow">↻</span></div>
+<button class="btn" id="go">Faire tourner la boucle</button>
+<p class="lead" style="font-size:.875rem;margin:16px 0 8px">Exemple : « Trouve un créneau de réunion avec Paul et Inès la semaine prochaine. »</p>
+<div class="log" id="lg">…</div>
+<div class="note"><strong>Ce qui fait un agent selon la vidéo :</strong> il raisonne, il planifie, il a de la mémoire, et il a assez d'autonomie pour prendre des décisions à votre place.</div>`;
+S[0].init=()=>{const L=["Raisonner → Il me faut les agendas des 3 personnes.","Agir      → J'utilise l'outil Agenda.","Observer  → Mardi 10 h : Inès n'est pas libre.","Ajuster   → J'essaie mercredi 14 h : tout le monde est libre."];
+ $('#go').onclick=async()=>{const id=++run,b=$$('#react .node');$('#lg').textContent='';b.forEach(x=>x.className='node');
+  for(let i=0;i<4;i++){if(id!==run)return;b.forEach(x=>x.classList.remove('hot'));b[i].classList.add('hot');$('#lg').textContent+=(i?'\n':'')+L[i];await wait(1100);}
+  b[3].className='node ok';};};
+
+const T={
+ seq:"<b>Séquentiel</b> : il avance comme sur une chaîne de montage, étape 1, puis 2, puis 3.<br>Prévisible, mais rigide.<br><span class='k'>Convient à</span> un parcours simple qui ne change jamais. Exemple : le dossier d'arrivée d'un salarié.",
+ rea:"<b>Réactif</b> : il décide sur le moment (« que faire maintenant ? »), un coup avec l'outil A, un coup avec l'outil B.<br>Souple, mais il ne prévoit pas la suite.<br><span class='k'>Convient à</span> une situation qui évolue. Exemple : le support client.",
+ pla:"<b>Planificateur</b> : il dresse d'abord un plan, puis il l'exécute.<br>Il gère les étapes qui dépendent les unes des autres.<br><span class='k'>Convient à</span> un objectif en plusieurs étapes. Exemple de la vidéo : organiser un voyage (on fixe les dates, puis on réserve l'hôtel, puis le vol)."};
+S[1]=()=>`<h2>Trois façons de mener le travail</h2>
+<p class="lead">Aucune n'est meilleure que les autres. Tout dépend du problème à résoudre.</p>
+<div class="row"><button data-k="seq" class="chip tb">Séquentiel</button><button data-k="rea" class="chip tb">Réactif</button><button data-k="pla" class="chip tb">Planificateur</button></div>
+<div id="tc" class="out">Choisissez une famille.</div>`;
+S[1].init=()=>pick('.tb',T,'#tc');
+
+const B={
+ llm:"<b>Agent LLM</b> : le cerveau. Il s'appuie sur un modèle de langage et sait réfléchir et écrire.<br><span class='k'>Dans la démo :</span> le planificateur, le rédacteur et les deux vérificateurs.",
+ wf:"<b>Agent de workflow</b> : le contremaître. Il n'écrit rien lui-même, il décide de l'ordre d'intervention des autres et relance une étape si besoin.<br><span class='k'>Dans la démo :</span> deux « Loop Agents », qui recommencent une étape quand la vérification échoue.",
+ cu:"<b>Agent personnalisé</b> : du sur-mesure pour les développeurs, quand les deux autres ne suffisent pas. On le crée à partir du modèle de base d'ADK (<code>BaseAgent</code>).<br><span class='k'>Dans la démo :</span> pas utilisé, seulement mentionné."};
+S[2]=()=>`<h2>ADK fournit trois sortes de briques</h2>
+<p class="lead">ADK (Agent Development Kit) est une boîte à outils en Python. On compose son agent en assemblant ces briques comme des pièces de Lego.</p>
+<div class="row"><button data-k="llm" class="chip bb">Agent LLM</button><button data-k="wf" class="chip bb">Agent de workflow</button><button data-k="cu" class="chip bb">Agent personnalisé</button></div>
+<div id="bc" class="out">Choisissez une brique.</div>
+<div class="note"><strong>Comparaison :</strong> dans une cuisine, les agents LLM sont les cuisiniers, l'agent de workflow est le chef qui annonce les plats et renvoie une assiette ratée.</div>`;
+S[2].init=()=>pick('.bb',B,'#bc');
+
+const F={
+ name:"<b>Nom</b> : <code>blog_planner</code><br>Sert à reconnaître l'agent facilement, dans le code comme à l'écran.",
+ model:"<b>Modèle</b> : l'IA qui fait tourner l'agent.<br>Il est indiqué dans un fichier de réglages (<code>.env</code>) : on peut en changer sans toucher au code.",
+ desc:"<b>Description</b> : une courte note écrite pour les humains, qui dit à quoi sert l'agent.",
+ instr:"<b>Instruction</b> : la partie la plus importante, la consigne.<br>Ici : « Produis un plan en Markdown avec un titre, une courte introduction, 4 à 6 parties avec des puces et une conclusion. »<br>Plus la consigne est précise, plus le résultat est fiable.",
+ out:"<b>Clé de sortie</b> (<code>output_key</code>) : <code>blog_outline</code><br>Le nom sous lequel la production est rangée dans le <b>dossier commun</b> (l'état partagé). L'agent suivant peut ainsi la retrouver sans intervention."};
+S[3]=()=>`<h2>Chaque agent tient sur une fiche en 5 champs</h2>
+<p class="lead">Exemple : le premier agent de la démo, le planificateur, dont l'unique mission est de transformer un sujet en plan.</p>
+<div class="row"><button data-k="name" class="chip fb">Nom</button><button data-k="model" class="chip fb">Modèle</button><button data-k="desc" class="chip fb">Description</button><button data-k="instr" class="chip fb">Instruction</button><button data-k="out" class="chip fb">Clé de sortie</button></div>
+<div id="fc" class="out">Cliquez sur un champ.</div>
+<div class="note"><strong>Vous retrouvez la logique d'un bon prompt :</strong> un rôle, une tâche, un format attendu. La clé de sortie, en plus, dit où ranger le résultat.</div>`;
+S[3].init=()=>pick('.fb',F,'#fc');
+
+S[4]=()=>`<h2>Deux boucles « produire → vérifier → recommencer »</h2>
+<p class="lead">Les vérificateurs n'écrivent rien de nouveau. Ils répondent <b>OK</b> si tout y est, ou <b>retry</b> en expliquant ce qui manque. La boucle relance alors l'étape avec les mêmes consignes, <b>3 fois au maximum</b>.</p>
+<div class="loop"><span>Boucle 1 · robust_blog_planner</span><div class="row" style="margin:8px 0"><span class="node" id="a1">Planificateur</span><span class="arrow">⇄</span><span class="node" id="c1">Vérif. du plan<small>titre, intro, 4 à 6 parties, conclusion</small></span></div></div>
+<div class="loop"><span>Boucle 2 · robust_blog_writer</span><div class="row" style="margin:8px 0"><span class="node" id="a2">Rédacteur<small>pour des ingénieurs, sans les bases</small></span><span class="arrow">⇄</span><span class="node" id="c2">Vérif. de l'article<small>intro, parties du plan, conclusion</small></span></div></div>
+<button class="btn" id="go">Lancer les deux boucles</button>
+<div class="row" style="align-items:flex-start;gap:16px">
+<div class="log" id="lg" style="flex:1 1 300px">…</div>
+<div class="log" id="sh" style="flex:1 1 220px">Dossier commun\n{ }</div></div>
+<div class="note warn"><strong>Limite :</strong> les vérificateurs contrôlent la forme et le respect des consignes, pas l'exactitude des faits. Une relecture humaine reste nécessaire.</div>`;
+S[4].init=()=>{$('#go').onclick=async()=>{const id=++run,lg=$('#lg'),sh=$('#sh');lg.textContent='';sh.textContent='Dossier commun\n{ }';
+ ['#a1','#c1','#a2','#c2'].forEach(s=>$(s).className='node');const st=[];
+ for(const [a,c,key,nom] of [['#a1','#c1','blog_outline','Plan'],['#a2','#c2','blog_post','Article']]){
+  const okAt=Math.random()<0.2?4:1+Math.floor(Math.random()*3);let done=false;
+  for(let n=1;n<=3;n++){if(id!==run)return;$(a).classList.add('hot');$(c).classList.remove('ok','ko');
+   lg.textContent+=`${nom}, tentative ${n}…`;await wait(800);if(id!==run)return;$(a).classList.remove('hot');
+   const ok=n>=okAt;$(c).classList.add(ok?'ok':'ko');lg.textContent+=ok?' OK\n':' retry\n';await wait(600);
+   if(ok){done=true;st.push(key+': "…"');sh.textContent='Dossier commun\n{\n  '+st.join(',\n  ')+'\n}';break;}}
+  if(!done){lg.textContent+='3 échecs : arrêt, un humain doit intervenir.';return;}}
+ lg.textContent+='Les deux étapes sont validées.';};};
+
+const STEPS=["Installer <code>uv</code> (l'outil qui gère Python)","Installer Google ADK","Créer un fichier <code>agent.py</code> et importer les bibliothèques","Écrire les agents, les boucles et Blogger","Lancer <code>adk web</code> dans le terminal","Ouvrir le lien local et donner un sujet"];
+S[5]=()=>`<h2>Un chef d'orchestre, puis le lancement</h2>
+<p class="lead">Chaque boucle est « emballée » comme un outil. L'agent principal, <b>Blogger</b>, n'a accès qu'à ces deux outils : il les appelle sans s'occuper de ce qui se passe à l'intérieur. Son travail reste ainsi clair et maîtrisé.</p>
+<div class="row"><span class="node hot">Blogger<small>agent principal</small></span><span class="arrow">→</span><span class="node">Outil : boucle 1<small>plan</small></span><span class="arrow">→</span><span class="node">Outil : boucle 2<small>article</small></span><span class="arrow">→</span><span class="node">Il ajoute lui-même<small>3 titres, 2 accroches</small></span></div>
+<button class="btn" id="go">Essayer : « Les 10 usages des agents IA »</button>
+<div class="row" id="out"></div>
+<p class="lead" style="font-size:.875rem;margin:24px 0 4px">Les étapes pour le faire soi-même (cliquez pour cocher) :</p>
+<div>${STEPS.map((s,i)=>`<div class="ck" role="checkbox" aria-checked="false" tabindex="0"><span class="box" aria-hidden="true"></span><span>${i+1}. ${s}</span></div>`).join('')}</div>
+<div class="note"><strong>À retenir :</strong> un agent, ce n'est pas seulement un modèle puissant. C'est une organisation, faite de rôles, de consignes précises, d'un dossier commun, de contrôles et d'une limite de tentatives.</div>`;
+S[5].init=()=>{const O=["Plan validé","Article validé","3 titres","2 accroches courtes"];
+ $('#go').onclick=async()=>{const id=++run,o=$('#out');o.innerHTML='';for(const x of O){await wait(650);if(id!==run)return;o.insertAdjacentHTML('beforeend',`<span class="badge">${x}</span>`);}};
+ $$('.ck').forEach(r=>{const t=()=>{const on=r.classList.toggle('on');r.setAttribute('aria-checked',on);};r.onclick=t;r.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();t();}};});};
+
+function show(i){cur=(i+N)%N;run++;
+ $('#steps').innerHTML=titles.map((t,k)=>`<button class="tab${k===cur?' on':''}" data-s="${k}"${k===cur?' aria-current="step"':''}>${t}</button>`).join('');
+ $$('[data-s]').forEach(b=>b.onclick=()=>show(+b.dataset.s));
+ $('#panel').innerHTML=S[cur]();S[cur].init();$('#pos').textContent=`Étape ${cur+1} sur ${N}`;}
+$('#prev').onclick=()=>show(cur-1);$('#next').onclick=()=>show(cur+1);
+show(0);
+</script>
+<a href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:9999;font:700 14px system-ui,sans-serif;background:#001662;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 8px 24px rgba(20,23,43,.10)">← Menu</a>
