@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assistant IA pour les RH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Même gabarit que animation-design-md.html : scène bleu nuit + pupitre de narration, puis tableau, exercice et prompts à copier. Quatre couleurs de couche : règles (orange), méthode (vert), faits (bleu), cas (blanc). */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --fg:#0d1a3b; --muted:#56627c; --line:#d8deea;
+  --navy:#0f2a7a; --ok:#17784f; --ok-bg:#e4f4ec; --warn:#b4400f; --warn-bg:#fdeee5;
+  --stage:#0b1858; --stage-2:#16247a; --stage-3:#22318f; --stage-fg:#eef2fb; --stage-muted:#a3aed0;
+  --lime:#e2ff1a; --blue:#58a6ff; --orange:#ffad5c; --green:#6fe0a6; --red:#ff8a8a; --pale:#f4f6ff;
+  --r-bg:#fff1e0; --r-fg:#9a4f00; --m-bg:#e4f4ec; --m-fg:#17784f; --f-bg:#e6f0fb; --f-fg:#1f5fae; --c-bg:#eef1fb; --c-fg:#0f2a7a;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12;
+  --r-bg:#3a2612; --r-fg:#ffc88a; --m-bg:#12301f; --m-fg:#8fe0bd; --f-bg:#13253f; --f-fg:#9cc8ff; --c-bg:#1c2547; --c-fg:#c9d5ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12;
+  --r-bg:#3a2612; --r-fg:#ffc88a; --m-bg:#12301f; --m-fg:#8fe0bd; --f-bg:#13253f; --f-fg:#9cc8ff; --c-bg:#1c2547; --c-fg:#c9d5ff; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.05;margin:0;color:var(--navy);text-wrap:balance;letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--muted);max-width:66ch}
+code,.mono{font-family:var(--f-mono)}
+button{font:inherit}
+
+/* ---------- Scène ---------- */
+.stage{position:relative;background:radial-gradient(120% 140% at 90% 0%,var(--stage-3) 0%,var(--stage) 60%);color:var(--stage-fg);border-radius:16px;min-height:460px;overflow:hidden}
+.stage::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border:28px solid var(--lime);border-radius:50%;opacity:.18;pointer-events:none}
+.scene{display:none;padding:26px clamp(14px,3.4vw,34px);gap:18px;position:relative;z-index:1}
+.scene.on{display:grid}
+.tag{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--stage-muted)}
+.big{font-family:var(--f-display);font-weight:800;font-size:clamp(1.3rem,2.8vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
+.big em{font-style:normal;color:var(--lime)}
+.scene.on .a{animation:rise .55s cubic-bezier(.3,.7,.2,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(226,255,26,.55)}100%{box-shadow:0 0 0 10px rgba(226,255,26,0)}}
+.bub{padding:10px 14px;border-radius:12px;font-size:.92rem;line-height:1.55;background:var(--pale);color:#0d1a3b;justify-self:start;max-width:100%}
+.bub .who{display:block;font-family:var(--f-mono);font-size:.68rem;opacity:.65;margin-bottom:2px}
+.panelS{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;min-width:0}
+.panelS h4{margin:0 0 6px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--stage-muted);font-weight:600}
+.why{font-size:.88rem;color:var(--stage-muted)}
+.chip{display:inline-block;border-radius:6px;padding:1px 8px;font-family:var(--f-mono);font-size:.74rem;margin:2px 4px 2px 0;background:rgba(255,255,255,.1);color:var(--stage-fg)}
+
+/* couleurs de couche sur la scène */
+.bub .kc{--k:#8b97c9}
+.kr{--k:var(--orange)} .km{--k:var(--green)} .kf{--k:var(--blue)} .kc{--k:var(--pale)}
+.mark{border-bottom:3px solid transparent;padding-bottom:1px;transition:border-color .4s,background .4s}
+.scene.on .mark{animation:markin .01s linear var(--d,0s) both}
+@keyframes markin{to{border-bottom-color:var(--k);background:color-mix(in srgb,var(--k) 22%,transparent)}}
+.lg{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.82rem;color:var(--stage-muted)}
+.lg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--k);margin-right:6px;vertical-align:-1px}
+.verdict{font-family:var(--f-mono);font-size:.84rem;color:var(--orange)}
+
+/* scène 2 : quatre familles */
+.fam{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.fam div{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-top:4px solid var(--k);border-radius:10px;padding:12px;display:grid;gap:6px;align-content:start;font-size:.88rem}
+.fam b{font-family:var(--f-display);font-size:1.2rem;color:var(--k)}
+.fam .q{font-family:var(--f-mono);font-size:.74rem;color:var(--stage-muted)}
+.fam .ex{border-left:2px solid var(--k);padding-left:8px}
+
+/* maquette de Projet claude.ai */
+.split{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+.app{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;min-width:0}
+.win-h{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1);font-family:var(--f-mono);font-size:.76rem;color:var(--stage-muted)}
+.win-h i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+.app-b{display:grid;grid-template-columns:minmax(0,1fr) 11em;gap:10px;padding:12px}
+.chat{display:grid;gap:8px;align-content:start;font-size:.84rem;color:var(--stage-muted)}
+.side{display:grid;gap:8px;align-content:start}
+.field{display:grid;gap:3px;background:#081245;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:.8rem}
+.field .fl{font-family:var(--f-mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--stage-muted)}
+.field.hot{border-color:var(--k);animation:glow 1.4s ease-out .6s 2}
+.field.hot .fl{color:var(--k)}
+.file{background:#081245;border:1px solid rgba(255,255,255,.14);border-radius:12px;font-family:var(--f-mono);font-size:clamp(.74rem,1.4vw,.84rem);line-height:1.55;min-width:0;overflow:hidden}
+.file .body{padding:12px 16px;display:grid;gap:2px;overflow-x:auto}
+.ln{white-space:pre-wrap}
+.h1{color:var(--k,var(--orange));font-weight:600}
+.dim{color:var(--stage-muted)}
+.eq{display:grid;gap:8px}
+.eq div{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:10px;align-items:baseline;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.eq b{font-family:var(--f-mono);font-size:.76rem;color:var(--k)}
+
+/* scène 4 : gabarit de procédure */
+.rub4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rub4 div{background:#081245;border:1px solid rgba(111,224,166,.35);border-radius:10px;padding:10px 12px;font-size:.86rem;display:grid;gap:4px}
+.rub4 b{font-family:var(--f-mono);font-size:.74rem;color:var(--green);text-transform:uppercase;letter-spacing:.05em}
+.procs{display:grid;gap:6px}
+.procs div{font-family:var(--f-mono);font-size:.82rem;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--green);border-radius:8px;padding:7px 10px}
+.procs small{display:block;font-family:var(--f-body);color:var(--stage-muted);font-size:.78rem}
+
+/* scène 5 : documents datés */
+.docs{display:grid;gap:6px}
+.doc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--blue);border-radius:8px;padding:7px 10px;font-size:.86rem}
+.doc .dt{font-family:var(--f-mono);font-size:.72rem;background:rgba(88,166,255,.16);color:var(--blue);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.doc.clash{border-color:var(--orange);border-left-color:var(--orange)}
+.doc.clash .dt{background:rgba(255,173,92,.18);color:var(--orange)}
+.vs{display:grid;gap:10px}
+.vs .pair{background:#081245;border:1px dashed var(--orange);border-radius:10px;padding:10px 12px;font-size:.86rem;display:grid;gap:4px}
+.vs .pair b{font-family:var(--f-mono);font-size:.72rem;color:var(--orange);text-transform:uppercase;letter-spacing:.06em}
+
+/* scène 6 : la demande */
+.pieces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.piece{background:#081245;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;font-size:.84rem;display:grid;gap:4px;align-content:start}
+.piece b{font-family:var(--f-mono);font-size:.72rem;color:var(--stage-muted);text-transform:uppercase;letter-spacing:.06em}
+.hl{background:rgba(226,255,26,.16);outline:1px solid var(--lime);border-radius:4px;padding:0 3px}
+
+/* scène 7 : fenêtre de contexte interactive */
+.picker{display:flex;flex-wrap:wrap;gap:6px}
+.picker button{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 14px;background:transparent;color:var(--stage-fg);cursor:pointer;font-weight:600;font-size:.86rem}
+.picker button[aria-pressed="true"]{background:var(--lime);color:#0b1858;border-color:var(--lime)}
+.ctxgrid{display:grid;grid-template-columns:minmax(0,1fr) 2.4em minmax(0,1.15fr) 2.4em minmax(0,.8fr);gap:8px;align-items:center}
+.res{display:grid;gap:5px}
+.res .it{font-family:var(--f-mono);font-size:.74rem;border-radius:6px;padding:4px 8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--stage-muted);transition:all .35s}
+.res .it.m{border-left:3px solid var(--green)} .res .it.f{border-left:3px solid var(--blue)}
+.res .it.sel{color:#0b1858;background:var(--k);border-color:var(--k)}
+.res .it.m.sel{--k:var(--green)} .res .it.f.sel{--k:var(--blue)}
+.arrow{font-size:1.5rem;color:var(--lime);text-align:center}
+.ctxw{border:2px dashed rgba(255,255,255,.35);border-radius:12px;padding:10px;display:grid;gap:6px}
+.ctxw>.cap{font-family:var(--f-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--stage-muted)}
+.lay{border-radius:8px;padding:7px 10px;font-size:.82rem;border:1px solid var(--k);background:color-mix(in srgb,var(--k) 16%,transparent);display:grid;gap:2px}
+.lay b{font-family:var(--f-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--k)}
+.lay.flash{animation:glow 1s ease-out 1}
+.model{display:grid;gap:8px}
+.model div{background:var(--stage-2);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-size:.84rem;text-align:center}
+.model b{display:block;font-family:var(--f-display);font-size:1rem}
+.model .you{border-color:var(--lime)}
+.model .you b{color:var(--lime)}
+
+/* scène 8 : le brouillon */
+.out{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.order{display:grid;gap:6px;counter-reset:o}
+.order div{counter-increment:o;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 10px;font-size:.86rem}
+.order div::before{content:counter(o) ". ";font-family:var(--f-mono);color:var(--stage-muted)}
+.order .first{border-color:var(--lime);background:rgba(226,255,26,.08)}
+.vfs{display:grid;gap:6px}
+.vf{text-align:left;background:#081245;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 10px;color:var(--stage-fg);cursor:pointer;font-size:.86rem;display:grid;gap:2px}
+.vf:hover,.vf[aria-pressed="true"]{border-color:var(--lime)}
+.vf small{font-family:var(--f-mono);font-size:.7rem;color:var(--orange)}
+.origin{min-height:5.4em;background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;font-size:.86rem;display:grid;gap:6px;align-content:start}
+.origin .o{display:inline-block;border-radius:6px;padding:1px 8px;font-family:var(--f-mono);font-size:.72rem;color:#0b1858;background:var(--k);margin-right:4px}
+
+/* scène 9 : la boucle */
+.loop{display:grid;grid-template-columns:minmax(0,1fr) 2em minmax(0,1fr) 2em minmax(0,1fr) 2em minmax(0,1fr);gap:6px;align-items:center}
+.lbox{background:var(--stage-2);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px;font-size:.82rem;text-align:center;display:grid;gap:2px}
+.lbox b{font-family:var(--f-display);font-size:.98rem}
+.lbox.you{border:2px solid var(--lime)} .lbox.you b{color:var(--lime)}
+.lbox.off{opacity:.55;border-style:dashed}
+.back{font-family:var(--f-mono);font-size:.8rem;color:var(--lime)}
+.q8{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.q8 div{background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:.82rem;display:grid;gap:2px}
+.q8 b{font-family:var(--f-mono);font-size:.72rem;color:var(--lime)}
+
+/* scène 10 : avant / après */
+.toggle{display:inline-flex;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:3px;gap:3px;justify-self:start}
+.toggle button{border:0;border-radius:999px;padding:6px 14px;background:transparent;color:var(--stage-fg);cursor:pointer;font-weight:600;font-size:.88rem}
+.toggle button[aria-pressed="true"]{background:var(--lime);color:#0b1858}
+.ab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.ab .gap{display:grid;gap:6px}
+.ab .after-only{display:none}
+.ab.after .after-only{display:grid}
+.ab.after .before-only{display:none}
+.res2{background:#081245;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;font-size:.88rem;display:grid;gap:6px}
+.res2 .bad{color:var(--red)} .res2 .good{color:var(--green)}
+.fix{display:grid;gap:6px}
+.fix div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--stage-2);border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--k);border-radius:8px;padding:7px 10px;font-size:.84rem}
+.fix span{font-family:var(--f-mono);font-size:.72rem;color:var(--k);white-space:nowrap}
+
+/* scène 11 : l'échelle */
+.ladder{display:grid;gap:7px}
+.rung{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:9px 12px;font-size:.88rem}
+.rung .n{font-family:var(--f-display);font-size:1.4rem;color:var(--lime);line-height:1;text-align:center}
+.rung b{display:block}
+.rung small{color:var(--stage-muted)}
+.st{font-family:var(--f-mono);font-size:.68rem;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.st.t{background:rgba(111,224,166,.18);color:var(--green)}
+.st.nt{background:rgba(255,173,92,.18);color:var(--orange)}
+.st.loc{background:rgba(88,166,255,.18);color:var(--blue)}
+
+/* ---------- Pupitre ---------- */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 26px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px)}
+.narr{min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.narr h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.25rem,2.5vw,1.65rem);margin:4px 0 8px;line-height:1.15;text-wrap:balance}
+.narr p{margin:0 0 8px;max-width:68ch}
+.narr .key{background:var(--ok-bg);color:var(--ok);padding:8px 12px;border-radius:8px;font-weight:500}
+.narr .warn{background:var(--warn-bg);color:var(--warn);padding:8px 12px;border-radius:8px}
+.controls{display:flex;flex-direction:column;gap:10px;min-width:210px}
+.row{display:flex;gap:8px}
+.ctl{font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;cursor:pointer;flex:1}
+.ctl:hover{border-color:var(--navy)}
+.ctl.primary{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.ctl:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--f-mono);font-size:.72rem;cursor:pointer;padding:0}
+.dot.cur{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.dot.seen{border-color:var(--navy);color:var(--navy)}
+.hint{font-size:.75rem;color:var(--muted);text-align:center}
+
+/* ---------- Introduction ---------- */
+.intro{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.intro>div{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:6px;align-content:start;background:var(--bg)}
+.intro h3{margin:0;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+.intro p{margin:0;font-size:.92rem}
+.intro ul{margin:0;padding-left:1.1em;display:grid;gap:3px;font-size:.92rem}
+.intro .wide{grid-column:1/-1}
+.cases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cases div{border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:10px 12px;display:grid;gap:4px;align-content:start;font-size:.86rem;background:var(--surface)}
+.cases b{font-size:.92rem}
+.cases small{color:var(--muted)}
+.cases .bad{border-top-color:var(--warn)}
+.res-note{font-size:.88rem;color:var(--muted);margin:0}
+
+/* ---------- Tableau de correspondance ---------- */
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px);display:grid;gap:12px}
+.sec h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.2rem,2.4vw,1.5rem);margin:0;color:var(--navy)}
+.sec>p{margin:0;color:var(--muted)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td:first-child{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-weight:600;font-size:.82rem}
+.p-r{background:var(--r-bg);color:var(--r-fg)} .p-m{background:var(--m-bg);color:var(--m-fg)} .p-f{background:var(--f-bg);color:var(--f-fg)} .p-c{background:var(--c-bg);color:var(--c-fg)} .p-n{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.test{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.test div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:4px;font-size:.88rem;background:var(--bg)}
+
+/* ---------- Exercice ---------- */
+.qitem{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.qitem blockquote{margin:0;font-weight:500}
+.qbtns{display:flex;gap:8px;flex-wrap:wrap}
+.qbtns button{font-family:var(--f-mono);font-size:.82rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 10px;cursor:pointer}
+.qbtns button:hover{border-color:var(--navy)}
+.qbtns button.right{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.qbtns button.wrong{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.fb{font-size:.88rem;margin:0;color:var(--muted)}
+.score{font-weight:600;color:var(--navy)}
+
+/* prompts à copier */
+.copy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.copy .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px;min-width:0;align-content:start}
+.copy h3{font-family:var(--f-display);font-size:1.05rem;margin:0}
+.copy .when{font-size:.85rem;color:var(--muted);margin:0}
+.copy pre{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--f-mono);font-size:.8rem;white-space:pre-wrap;overflow-x:auto}
+.copy .ctl{justify-self:start;flex:none;padding:7px 12px;font-size:.88rem}
+.copy .panel.wide{grid-column:1/-1;border:2px solid var(--navy)}
+.copy .step0{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+.credit{font-size:.82rem;color:var(--muted);margin:0}
+.credit a{color:var(--navy)}
+
+@media (max-width:820px){
+  .intro{grid-template-columns:minmax(0,1fr)}
+  .fam,.q8,.test,.cases{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split,.out,.ab,.copy,.rub4{grid-template-columns:minmax(0,1fr)}
+  .pieces{grid-template-columns:minmax(0,1fr)}
+  .ctxgrid,.loop{grid-template-columns:minmax(0,1fr)}
+  .arrow{transform:rotate(90deg)}
+  .desk{grid-template-columns:minmax(0,1fr)}
+  .controls{min-width:0}
+  .app-b{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){.fam,.q8,.test,.cases{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){
+  .scene.on *,.field.hot,.lay.flash{animation:none!important}
+  .scene.on .mark{border-bottom-color:var(--k);background:color-mix(in srgb,var(--k) 22%,transparent)}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Assistant IA pour les RH</h1>
+    <p>Un assistant IA fiable ne tient pas dans un seul prompt. En 11 étapes, sur l'arrivée fictive d'Inès dans une PME fictive, voici les quatre familles d'informations à séparer, où chacune se range dans Claude, et comment elles se placent dans le schéma prompt → contexte → harnais.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="ctx-t">
+    <h2 id="ctx-t">Le contexte : un assistant RH qu'on essaie de prendre en défaut</h2>
+    <div class="intro">
+      <div>
+        <h3>Le projet</h3>
+        <p>Un assistant RH monté dans un Projet claude.ai, sans code, pour Ombelle, une PME fictive de 58 salariés. Il prépare des brouillons pour trois tâches : l'arrivée d'un nouveau collaborateur, le compte rendu d'une réunion, la réponse à la question d'un salarié.</p>
+        <p><strong>Il prépare, la RH décide.</strong> Il n'a aucun outil et n'envoie rien.</p>
+      </div>
+      <div>
+        <h3>Ce qu'on cherche à faire</h3>
+        <p>Rendre l'assistant fiable et facile à corriger. Pour cela, on sépare ce qu'on lui donne en quatre familles : les <strong>règles</strong>, la <strong>méthode</strong>, les <strong>faits</strong> et le <strong>cas</strong> du jour. Puis on regarde où chacune se range dans Claude et dans le schéma du harnais.</p>
+      </div>
+      <div>
+        <h3>Le test</h3>
+        <p>On lui confie l'arrivée d'Inès, une salariée inventée, avec trois pièces : sa fiche de poste, le mail de son manager et les notes de la RH. Le test est réussi si l'assistant :</p>
+        <ul>
+          <li>signale que la DPAE du 4 novembre a été faite trop tôt ;</li>
+          <li>ne tranche pas entre le 7 et le 14 décembre ;</li>
+          <li>écrit [à préciser] pour ce qui manque, au lieu de l'inventer.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Les pièges glissés dans le dossier</h3>
+        <ul>
+          <li>deux dates d'arrivée qui ne concordent pas ;</li>
+          <li>une démarche faite avant le délai écrit ;</li>
+          <li>une ancienne procédure (2023) contredite par une note récente (2026) ;</li>
+          <li>une information que la RH a oubliée ;</li>
+          <li>une demande de télétravail qui n'est pas à lui de trancher.</li>
+        </ul>
+      </div>
+      <div class="wide">
+        <h3>Comment on essaie de le mettre en défaut</h3>
+        <p>Chaque procédure est testée sur quatre types de cas. Les trois derniers sont faits pour le piéger.</p>
+        <div class="cases">
+          <div><b>Normal</b><small>Une demande complète et cohérente. Il doit produire le livrable, dans l'ordre.</small></div>
+          <div class="bad"><b>Information absente</b><small>Une pièce muette sur un point. Il doit écrire [à préciser], pas deviner.</small></div>
+          <div class="bad"><b>Contradiction</b><small>Deux documents qui se contredisent. Il cite les deux et laisse la RH choisir.</small></div>
+          <div class="bad"><b>Hors périmètre</b><small>Un courrier de fin de période d'essai, une note sur un manager. Il doit s'arrêter et proposer autre chose.</small></div>
+        </div>
+        <p class="res-note">Résultat annoncé par l'auteur : dix demandes, un essai chacune, et les pièges principaux repérés. Mais la relecture trouve encore des erreurs, par exemple un responsable désigné sans qu'aucun document le dise, ou du matériel annoncé comme prêt alors que personne ne l'avait commandé. Prudent ne veut pas dire infaillible : l'animation montre pourquoi, et où corriger.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" aria-live="polite">
+
+    <!-- 1. Le problème -->
+    <div class="scene" data-i="0">
+      <div class="tag a">Le problème</div>
+      <p class="big a" style="--d:.1s">Tout coller dans un message, <em>à chaque fois</em>.</p>
+      <div class="bub a" style="--d:.35s"><span class="who">Vous, à chaque nouvelle arrivée</span>
+        <span class="mark kr" style="--d:1.2s">Tu es mon assistant RH, tu ne décides rien à ma place.</span>
+        <span class="mark km" style="--d:1.6s">Fais une checklist de J-15 à J+30 avec un responsable par ligne.</span>
+        <span class="mark kf" style="--d:2s">La DPAE se fait au plus tôt 8 jours avant l'embauche.</span>
+        <span class="mark kf" style="--d:2.2s">L'ordinateur se commande sur le portail du prestataire.</span>
+        <span class="mark kc" style="--d:2.6s">Inès arrive le lundi 7 décembre comme chargée de communication.</span>
+      </div>
+      <div class="lg a" style="--d:2.9s"><span class="kr">une règle</span><span class="km">une méthode</span><span class="kf">un fait</span><span class="kc">le cas du jour</span></div>
+      <p class="verdict a" style="--d:3.2s">Le jour où vous oubliez une ligne, la réponse change. Et rien ne s'améliore d'une fois sur l'autre.</p>
+    </div>
+
+    <!-- 2. Quatre familles -->
+    <div class="scene" data-i="1">
+      <div class="tag a">La solution</div>
+      <p class="big a" style="--d:.1s">Quatre familles, <em>quatre rangements</em>.</p>
+      <div class="fam">
+        <div class="kr a" style="--d:.4s"><b>Les règles</b><span class="q">Vrai pour toutes les tâches ?</span><span class="ex">« N'invente jamais une date. »</span></div>
+        <div class="km a" style="--d:.7s"><b>La méthode</b><span class="q">Comment faire une tâche précise ?</span><span class="ex">« Pour une arrivée : checklist de J-15 à J+30. »</span></div>
+        <div class="kf a" style="--d:1s"><b>Les faits</b><span class="q">Vrai pour l'entreprise, avec une date ?</span><span class="ex">« DPAE : au plus tôt 8 jours avant. »</span></div>
+        <div class="kc a" style="--d:1.3s"><b>Le cas</b><span class="q">Vrai pour ce dossier seulement ?</span><span class="ex">« Inès arrive le 7 décembre. »</span></div>
+      </div>
+      <p class="why a" style="--d:1.7s">Une question suffit pour trier : à quel moment cette information cesse-t-elle d'être vraie ?</p>
+    </div>
+
+    <!-- 3. Les règles -->
+    <div class="scene kr" data-i="2">
+      <div class="tag a">Famille 1 · les règles</div>
+      <div class="split">
+        <div class="app a" style="--d:.15s">
+          <div class="win-h"><i></i><i></i><i></i>claude.ai · Projet « Assistant RH (test) »</div>
+          <div class="app-b">
+            <div class="chat"><div class="bub" style="font-size:.8rem">Zone de message du Projet</div><span>Chaque conversation ouverte ici hérite des Instructions.</span></div>
+            <div class="side">
+              <div class="field hot"><span class="fl">Instructions</span>Rôle, aiguillage, règles communes</div>
+              <div class="field"><span class="fl">Contexte</span>Fichiers du Projet</div>
+            </div>
+          </div>
+        </div>
+        <div class="eq">
+          <div class="a" style="--d:.5s"><b>Dans claude.ai</b>Les Instructions du Projet</div>
+          <div class="a" style="--d:.7s"><b>Dans le harnais</b>Le prompt système : toujours dans la fenêtre</div>
+          <div class="a" style="--d:.9s"><b>En local</b><span>Le fichier <code>CLAUDE.md</code></span></div>
+        </div>
+      </div>
+      <div class="file a" style="--d:1.1s"><div class="body">
+        <div class="ln h1">Instructions (résumé)</div>
+        <div class="ln">Tu es l'assistant RH d'Ombelle. Tu prépares, je décide.</div>
+        <div class="ln dim">Aiguillage : arrivée → procedure-integration · notes de réunion → procedure-compte-rendu · question d'un salarié → procedure-reponse-salarie. Sinon, dis-le.</div>
+        <div class="ln">Pour tout : cite le document utilisé · contradiction → signale, ne choisis pas · information absente → [à préciser] · aucune décision sur une personne · ni santé ni vie privée · tu n'envoies rien.</div>
+      </div></div>
+    </div>
+
+    <!-- 4. La méthode -->
+    <div class="scene km" data-i="3">
+      <div class="tag a">Famille 2 · la méthode</div>
+      <p class="big a" style="--d:.1s">Une procédure par tâche, <em>toujours le même gabarit</em>.</p>
+      <div class="split">
+        <div class="rub4">
+          <div class="a" style="--d:.4s"><b>Ce que la RH donne</b>Fiche de poste, mail du manager, notes.</div>
+          <div class="a" style="--d:.6s"><b>Ce que tu rends, dans cet ordre</b>1. À vérifier d'abord · 2. Checklist · 3. Première semaine · 4. Bienvenue · 5. Messages.</div>
+          <div class="a" style="--d:.8s"><b>Tes règles</b>Contrôle des dates : délais écrits, jours ouvrés, fermetures.</div>
+          <div class="a" style="--d:1s"><b>Ce que tu ne fais pas</b>Pas de décision sur la période d'essai, le télétravail, le salaire.</div>
+        </div>
+        <div class="procs">
+          <div class="a" style="--d:1.2s">procedure-integration<small>Préparer une arrivée</small></div>
+          <div class="a" style="--d:1.35s">procedure-compte-rendu<small>Mettre au propre des notes de réunion</small></div>
+          <div class="a" style="--d:1.5s">procedure-reponse-salarie<small>Préparer la réponse à un salarié</small></div>
+          <p class="why a" style="--d:1.7s">Dans claude.ai : des fichiers du Contexte. L'aiguillage des Instructions dit lequel suivre.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Les faits -->
+    <div class="scene kf" data-i="4">
+      <div class="tag a">Famille 3 · les faits</div>
+      <p class="big a" style="--d:.1s">Des documents <em>datés</em>, pas des souvenirs.</p>
+      <div class="split">
+        <div class="docs">
+          <div class="doc a" style="--d:.3s">Repères administratifs de l'embauche<span class="dt">nov. 2026</span></div>
+          <div class="doc a" style="--d:.4s">Livret d'accueil<span class="dt">non daté</span></div>
+          <div class="doc a" style="--d:.5s">Agenda décembre – janvier<span class="dt">hiver 2026</span></div>
+          <div class="doc clash a" style="--d:.6s">Note informatique (prestataire Ligeris)<span class="dt">sept. 2026</span></div>
+          <div class="doc clash a" style="--d:.7s">Procédure d'accueil (« écrire à Michel »)<span class="dt">mars 2023</span></div>
+          <div class="doc clash a" style="--d:.8s">Congés : 15 jours de préavis<span class="dt">janv. 2024</span></div>
+          <div class="doc clash a" style="--d:.9s">Note de service : 1 mois de préavis<span class="dt">nov. 2026</span></div>
+        </div>
+        <div class="vs">
+          <div class="pair a" style="--d:1.2s"><b>Contradiction 1</b>Qui commande l'ordinateur ? Michel (2023) ou le portail Ligeris (2026) ?</div>
+          <div class="pair a" style="--d:1.5s"><b>Contradiction 2</b>Préavis de congés : 15 jours (2024) ou 1 mois (2026) ?</div>
+          <p class="why a" style="--d:1.8s">Grâce aux dates, Claude peut dire lequel est le plus récent. C'est la RH qui choisit lequel s'applique.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Le cas -->
+    <div class="scene kc" data-i="5">
+      <div class="tag a">Famille 4 · le cas du jour</div>
+      <div class="bub a" style="--d:.1s"><span class="who">Vous, depuis la page du Projet</span>Nouvelle arrivée : Inès M., chargée de communication. Voici la fiche de poste, le mail de son manager et mes notes. Prépare son dossier d'arrivée.</div>
+      <div class="pieces">
+        <div class="piece a" style="--d:.5s"><b>Pièce 1 · fiche de poste</b><span>CDI, rattachée au directeur commercial. Outils : Microsoft 365, Canva, WordPress. Période d'essai : 3 mois.</span></div>
+        <div class="piece a" style="--d:.8s"><b>Pièce 2 · mail du manager</b><span>« Elle commence bien <span class="hl">le lundi 14</span> ? » · « Je suis au salon de Lyon le 7 et le 8. » · Elle demande à télétravailler le vendredi.</span></div>
+        <div class="piece a" style="--d:1.1s"><b>Pièce 3 · notes de la RH</b><span>Entrée : <span class="hl">lundi 7 décembre</span>, 9 h · <span class="hl">DPAE faite le 4/11</span> · Mutuelle : <span class="hl">je ne sais plus</span> · Binôme : personne.</span></div>
+      </div>
+      <p class="why a" style="--d:1.5s">Le cas ne contient que ce qui est propre à ce dossier. Les données sont inventées, et le prénom suivi d'une initiale ne suffit pas à rendre une vraie personne anonyme.</p>
+    </div>
+
+    <!-- 7. La fenêtre de contexte -->
+    <div class="scene" data-i="6">
+      <div class="tag a">Dans le harnais · la curation</div>
+      <div class="picker a" style="--d:.1s" role="group" aria-label="Type de demande">
+        <button type="button" data-k="arrivee" aria-pressed="true">Une arrivée</button>
+        <button type="button" data-k="reunion" aria-pressed="false">Des notes de réunion</button>
+        <button type="button" data-k="question" aria-pressed="false">La question d'un salarié</button>
+      </div>
+      <div class="ctxgrid a" style="--d:.3s">
+        <div class="panelS"><h4>Réservoir du Projet</h4><div class="res" id="res"></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="ctxw"><span class="cap">Fenêtre de contexte</span><div id="ctxw" style="display:grid;gap:6px"></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="model"><div><b>Le modèle</b>lit, rédige</div><div><b>Le brouillon</b>rien n'est envoyé</div></div>
+      </div>
+      <p class="why a" style="--d:.6s">Cliquez sur un type de demande : les règles restent, la méthode et les faits utiles changent.</p>
+    </div>
+
+    <!-- 8. Le brouillon -->
+    <div class="scene" data-i="7">
+      <div class="tag a">Ce que rend l'assistant</div>
+      <div class="out">
+        <div class="vfs">
+          <div class="panelS a" style="--d:.1s"><h4>À vérifier d'abord · cliquez un point</h4></div>
+          <button class="vf a" style="--d:.3s" type="button" data-o="0">La DPAE du 4/11 est faite trop tôt pour une arrivée le 7 décembre.<small>délai écrit dépassé</small></button>
+          <button class="vf a" style="--d:.45s" type="button" data-o="1">Le 7 ou le 14 décembre ? Le 7, le manager est au salon.<small>contradiction, non tranchée</small></button>
+          <button class="vf a" style="--d:.6s" type="button" data-o="2">Mutuelle : formulaire envoyé ? [à préciser]<small>information absente</small></button>
+          <button class="vf a" style="--d:.75s" type="button" data-o="3">Télétravail le vendredi : décision du manager et de la RH.<small>hors de son rôle</small></button>
+        </div>
+        <div style="display:grid;gap:10px">
+          <div class="origin a" style="--d:.9s" id="origin"><span class="why">Choisissez un point pour voir quelle couche l'a produit.</span></div>
+          <div class="order a" style="--d:1.1s">
+            <div class="first">À vérifier d'abord</div><div>La checklist de J-15 à J+30</div><div>La première semaine, jour par jour</div><div>Le message de bienvenue</div><div>Un message par personne qui doit agir</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. La boucle -->
+    <div class="scene" data-i="8">
+      <div class="tag a">Dans le harnais · la boucle</div>
+      <p class="big a" style="--d:.1s">« Terminé ? » : <em>c'est vous</em> qui répondez.</p>
+      <div class="loop a" style="--d:.35s">
+        <div class="lbox"><b>Fenêtre</b>les 4 couches</div><div class="arrow" aria-hidden="true">→</div>
+        <div class="lbox"><b>Modèle</b>rédige</div><div class="arrow" aria-hidden="true">→</div>
+        <div class="lbox off"><b>Outils</b>aucun ici</div><div class="arrow" aria-hidden="true">→</div>
+        <div class="lbox you"><b>Terminé ?</b>la RH relit</div>
+      </div>
+      <p class="back a" style="--d:.6s">↻ Non : vous relancez, ou vous corrigez un fichier. Oui : c'est vous qui envoyez.</p>
+      <div class="q8">
+        <div class="a" style="--d:.8s"><b>Dates</b>Recalculées ?</div>
+        <div class="a" style="--d:.9s"><b>Sources</b>Chaque règle a son document ?</div>
+        <div class="a" style="--d:1s"><b>Contradictions</b>Tranchées par vous ?</div>
+        <div class="a" style="--d:1.1s"><b>[à préciser]</b>Tous remplis ou retirés ?</div>
+        <div class="a" style="--d:1.2s"><b>Affirmations</b>Rien d'annoncé à tort ?</div>
+        <div class="a" style="--d:1.3s"><b>Responsables</b>Écrits ou supposés ?</div>
+        <div class="a" style="--d:1.4s"><b>Personnes</b>Ni santé ni avis ?</div>
+        <div class="a" style="--d:1.5s"><b>Ton</b>Celui de l'entreprise ?</div>
+      </div>
+    </div>
+
+    <!-- 10. Corriger le bon fichier -->
+    <div class="scene" data-i="9">
+      <div class="tag a">Si ça coince</div>
+      <div class="toggle a" style="--d:.1s" role="group" aria-label="Essai">
+        <button type="button" data-v="before" aria-pressed="true">1er essai</button>
+        <button type="button" data-v="after" aria-pressed="false">Après correction</button>
+      </div>
+      <div class="ab a" style="--d:.3s" id="ab">
+        <div class="res2">
+          <div class="before-only gap"><span class="bad">✕ La DPAE du 4/11 n'est pas signalée.</span><span class="why">Pourquoi ? La règle lui dit de s'appuyer sur les documents, et aucun document ne donnait le délai.</span></div>
+          <div class="after-only gap"><span class="good">✓ La DPAE du 4/11 est signalée comme faite trop tôt.</span><span class="why">Ajouts : un fait (le mémo « repères administratifs ») et une méthode (le contrôle des dates dans la procédure).</span></div>
+        </div>
+        <div class="fix">
+          <div class="kr">Une règle manquait<span>→ Instructions</span></div>
+          <div class="km">Une façon de faire manquait<span>→ procédure</span></div>
+          <div class="kf">Une information manquait<span>→ document</span></div>
+          <div class="kc">Valable pour ce dossier seulement<span>→ la demande</span></div>
+        </div>
+      </div>
+      <p class="why a" style="--d:.6s">Corriger dans la conversation ne sert qu'une fois. Corriger le fichier sert à chaque fois.</p>
+    </div>
+
+    <!-- 11. Vers un vrai harnais -->
+    <div class="scene" data-i="10">
+      <div class="tag a">Monter en autonomie, marche par marche</div>
+      <div class="ladder">
+        <div class="rung a" style="--d:.15s"><span class="n">1</span><span><b>Un Projet : règles + méthode + faits</b><small>Le contexte est bien rangé, l'humain fait la boucle.</small></span><span class="st t">testé par l'auteur</span></div>
+        <div class="rung a" style="--d:.35s"><span class="n">2</span><span><b>Une skill : la méthode et ses règles embarquées</b><small>Hors du Projet, elle n'a plus les Instructions : elle doit porter ses propres règles.</small></span><span class="st nt">prête, non installée</span></div>
+        <div class="rung a" style="--d:.55s"><span class="n">3</span><span><b>Un outil : Gmail en lecture seule</b><small>Claude va chercher l'information, sans pouvoir écrire.</small></span><span class="st nt">vu, non essayé</span></div>
+        <div class="rung a" style="--d:.75s"><span class="n">4</span><span><b>Un déclencheur : une tâche planifiée en mode Manuel</b><small>Le point du lundi se prépare seul, vous validez chaque action.</small></span><span class="st nt">vu, non essayé</span></div>
+        <div class="rung a" style="--d:.95s"><span class="n">5</span><span><b>En local : CLAUDE.md, connaissances/, .claude/skills/, MEMORY.md</b><small>Mêmes couches, rangées en fichiers dans un dossier.</small></span><span class="st loc">Cowork · Claude Code</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="desk">
+    <div class="narr">
+      <div class="eyebrow" id="eb">Étape 1 sur 11</div>
+      <h2 id="nt"></h2>
+      <div id="nx"></div>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <button class="ctl" type="button" id="prev">← Précédent</button>
+        <button class="ctl primary" type="button" id="next">Suivant →</button>
+      </div>
+      <div class="row">
+        <button class="ctl" type="button" id="replay">↻ Rejouer</button>
+        <button class="ctl" type="button" id="auto">▶ Lecture auto</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Flèches ← → du clavier</div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>La correspondance complète</h2>
+    <p>Chaque couche, où elle se range dans claude.ai, sa place dans le schéma du harnais, et son équivalent dans un dossier local.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Couche</th><th>Dans claude.ai</th><th>Dans le harnais</th><th>En local (Cowork, Claude Code)</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill p-r">Les règles</span></td><td>Instructions du Projet</td><td>Prompt système, toujours dans la fenêtre</td><td><code>CLAUDE.md</code></td></tr>
+        <tr><td><span class="pill p-m">La méthode</span></td><td>Procédures (fichiers du Contexte)</td><td>Réservoir, sélectionné par la curation</td><td>Skills (<code>SKILL.md</code>), à l'étape suivante</td></tr>
+        <tr><td><span class="pill p-f">Les faits</span></td><td>Documents du Contexte, datés</td><td>Réservoir (connaissance du domaine)</td><td>Dossier <code>connaissances/</code></td></tr>
+        <tr><td><span class="pill p-c">Le cas</span></td><td>Message et pièces jointes</td><td>Message de l'utilisateur</td><td>Message de l'utilisateur</td></tr>
+        <tr><td><span class="pill p-n">L'aiguillage</span></td><td>Instructions</td><td>Curation : choisir ce qu'on charge</td><td>Description des skills, ou orchestrateur</td></tr>
+        <tr><td><span class="pill p-n">Les interdits</span></td><td>Instructions et procédures</td><td>Règle d'arrêt, limites de permission</td><td>Règles du <code>CLAUDE.md</code>, permissions</td></tr>
+        <tr><td><span class="pill p-n">La relecture</span></td><td>Faite par la RH</td><td>La question « Terminé ? »</td><td>Boucle de vérification</td></tr>
+        <tr><td><span class="pill p-n">La correction</span></td><td>Modifier un fichier du Projet</td><td>Mise à jour du réservoir</td><td>Modifier un fichier ; noter la décision dans <code>MEMORY.md</code></td></tr>
+      </tbody>
+    </table></div>
+    <p class="credit">Petit Projet ou gros Projet ? Tant que le Contexte tient dans la fenêtre, Claude a tous les documents sous les yeux. Quand il approche de la limite, claude.ai passe automatiquement en mode RAG : Claude cherche alors les passages utiles au lieu de tout lire (<a href="https://support.claude.com/fr/articles/11473015-generation-augmentee-par-recuperation-rag-pour-les-projets" target="_blank" rel="noopener">aide Claude, RAG pour les projets</a>).</p>
+  </section>
+
+
+  <section class="copy">
+    <div class="panel wide">
+      <span class="step0">Étape 1 · trier ce que vous avez déjà</span>
+      <h3>Prompt : ranger mes informations en quatre couches</h3>
+      <p class="when">Collez vos consignes habituelles, vos procédures et vos notes (fictives pour un premier essai). Claude propose un rangement, il ne crée rien.</p>
+      <pre id="p0">Voici tout ce que je donne d'habitude à une IA pour [la tâche, ex. préparer l'arrivée d'un salarié] : [colle tes consignes, tes procédures, tes documents, un exemple de demande].
+
+Range chaque information dans une de ces quatre couches :
+- Règles : vraies pour toutes mes tâches (rôle, interdits, façon de signaler un doute) ;
+- Méthode : la façon de faire une tâche précise (entrées, livrable dans l'ordre, règles propres, ce qu'il ne faut pas faire) ;
+- Faits : vrais pour mon organisation, avec une date (délais, contacts, horaires, politiques) ;
+- Cas : valables pour ce dossier seulement.
+
+Rends un tableau à trois colonnes : information, couche, raison en une phrase.
+Puis signale :
+1. les faits sans date ;
+2. les faits qui se contredisent, avec les deux sources ;
+3. les règles qui manquent pour éviter les inventions ([à préciser], contradiction signalée sans trancher, aucune décision sur une personne).
+Ne crée aucun fichier et n'invente aucune règle : propose, j'arbitre.</pre>
+      <button class="ctl" type="button" data-copy="p0">Copier</button>
+    </div>
+    <div class="panel">
+      <span class="step0">Étape 2 · une procédure par tâche</span>
+      <h3>Prompt : écrire une procédure au gabarit</h3>
+      <p class="when">À faire pour une seule tâche récurrente, puis à tester sur quatre cas : normal, information absente, contradiction, hors périmètre.</p>
+      <pre id="p1">Écris une procédure pour la tâche « [nom] », avec exactement quatre rubriques :
+1. Ce que je donne : les entrées attendues.
+2. Ce que tu rends, dans cet ordre : un livrable numéroté qui commence par « À vérifier d'abord » (manques, contradictions, dates qui ne tiennent pas, décisions qui ne te reviennent pas ; pour chacun : d'où ça vient et qui peut trancher).
+3. Tes règles : les contrôles propres à cette tâche, décrits étape par étape.
+4. Ce que tu ne fais pas.
+Phrases courtes. Ne reprends pas les règles générales de mes Instructions.
+Termine par quatre cas de test fictifs : normal, information absente, contradiction, hors périmètre.</pre>
+      <button class="ctl" type="button" data-copy="p1">Copier</button>
+    </div>
+    <div class="panel">
+      <span class="step0">Étape 3 · quand la procédure est fiable</span>
+      <h3>Prompt : transformer une procédure en skill</h3>
+      <p class="when">Une skill sert hors du Projet, là où les Instructions n'existent plus : elle doit emporter ses règles.</p>
+      <pre id="p2">Transforme la procédure « [nom] » en skill.
+Rends :
+- un nom court en minuscules, avec des tirets ;
+- une description de moins de 200 caractères qui dit ce que fait la skill et quand l'utiliser ;
+- la méthode : les quatre rubriques de la procédure, puis une section « Règles de l'assistant » qui recopie les règles générales de mes Instructions (sources citées, [à préciser], contradiction signalée sans trancher, aucune décision sur une personne, ni santé ni vie privée, rien n'est envoyé).
+Indique ce qui, dans la procédure, dépend d'un document du Projet que la skill n'aura plus sous les yeux.</pre>
+      <button class="ctl" type="button" data-copy="p2">Copier</button>
+    </div>
+  </section>
+
+  <section class="sec" id="quiz">
+    <h2>Exercice : quelle couche ?</h2>
+    <p>Pour chaque information, choisissez la couche où elle doit être rangée. <span class="score" id="score"></span></p>
+  </section>
+
+  <p class="credit">D'après la méthode et le cas fictif (entreprise Ombelle, salariée Inès) du kit « Construire ton assistant RH dans Claude » de Jérémy Nicolas, newsletter <a href="https://jeremynicolas7.substack.com/p/avoir-un-assistant-ia-pour-les-rh" target="_blank" rel="noopener">Accélère avec l'IA</a>, version du 12 novembre 2026. Textes reformulés ; statuts « testé / non testé » tels que l'auteur les indique. Toutes les personnes et entreprises citées sont fictives.</p>
+</div>
+
+<script>
+const N=[
+  {t:"Le prompt qui fait tout",
+   x:`<p>Beaucoup de débutants recopient le même long message à chaque demande. Dedans, quatre sortes d'informations sont mélangées : des règles, une méthode, des faits sur l'entreprise et le cas du jour.</p><p class="key">Le problème n'est pas la longueur. C'est le mélange : on ne sait plus quoi corriger quand la réponse déçoit.</p>`},
+  {t:"Quatre familles, quatre rangements",
+   x:`<p>Imaginez un stagiaire sérieux qui arrive. Vous lui donnez le règlement de la maison (les règles), des fiches méthode (la méthode), un classeur de documents à jour (les faits), puis un dossier à traiter (le cas).</p><p>Pour trier une information, demandez-vous <strong>combien de temps elle reste vraie</strong> : toujours, pour une tâche, jusqu'à la prochaine note de service, ou pour ce dossier seulement.</p>`},
+  {t:"Les règles : les Instructions du Projet",
+   x:`<p>Les règles valent pour toutes les tâches. Dans claude.ai, elles vont dans le champ <strong>Instructions</strong> du Projet : Claude les relit à chaque message, quelle que soit la demande.</p><p>Dans le schéma du harnais, c'est le <strong>prompt système</strong>. En local, c'est le rôle de <code>CLAUDE.md</code>.</p><p class="key">Les Instructions contiennent aussi l'aiguillage : pour tel type de demande, suis telle procédure.</p>`},
+  {t:"La méthode : une procédure par tâche",
+   x:`<p>Chaque tâche récurrente a sa fiche, avec quatre rubriques : ce que la RH donne, ce que l'assistant rend et dans quel ordre, ses règles propres, ce qu'il ne fait pas.</p><p>Le livrable commence toujours par <strong>« À vérifier d'abord »</strong> : vous voyez les problèmes avant de lire un document qui a l'air propre.</p><p class="warn">Ces procédures ne sont <strong>pas des skills</strong> : ce sont des fichiers du Projet. Elles pourront en devenir quand elles auront fait leurs preuves (étape 11).</p>`},
+  {t:"Les faits : des documents datés",
+   x:`<p>Livret d'accueil, agenda, notes de service : ce sont les faits de l'entreprise. Ils vont dans le <strong>Contexte</strong> du Projet. Dans le harnais, c'est le <strong>réservoir</strong> où Claude puise.</p><p>Mettez une date dans chaque document. Quand deux documents se contredisent, Claude peut alors dire lequel est le plus récent, sans choisir à votre place.</p><p class="key">L'assistant suit vos documents, erreurs comprises. Un document faux donne un brouillon faux.</p>`},
+  {t:"Le cas : la demande du jour",
+   x:`<p>Le message ne contient plus que ce qui est propre à ce dossier : la personne, le poste, les pièces. Tout le reste est déjà rangé.</p><p>Repérez les pièges glissés dans les pièces : deux dates d'arrivée, une DPAE faite le 4 novembre, une mutuelle oubliée. Un bon assistant doit les voir.</p><p class="warn">Pour s'entraîner : uniquement des données inventées. Jamais de santé, de salaire, de RIB ni d'avis sur une personne.</p>`},
+  {t:"Ce qui entre dans la fenêtre de contexte",
+   x:`<p>C'est l'étape de <strong>curation</strong> du context engineering : parmi tout le réservoir, ce qui sert à cette demande entre dans la fenêtre.</p><p>Les <strong>règles</strong> sont toujours là. La <strong>méthode</strong> change selon l'aiguillage. Les <strong>faits</strong> utiles changent aussi. Le <strong>cas</strong> est votre message.</p><p class="key">Testez les trois demandes dans l'animation : seule la couche des règles ne bouge jamais.</p>`},
+  {t:"Le brouillon montre d'où vient chaque alerte",
+   x:`<p>Chaque point « À vérifier d'abord » est produit par une couche précise. Cliquez-les dans l'animation.</p><p>La DPAE trop précoce vient d'un fait (le délai écrit) et d'une méthode (le contrôle des dates). Le « 7 ou 14 » vient d'une règle : signaler sans trancher.</p><p class="key">Quand une alerte manque, vous savez où regarder : quelle couche aurait dû la produire ?</p>`},
+  {t:"Le harnais, c'est encore vous",
+   x:`<p>Dans un harnais complet, une boucle se demande « Terminé ? » et relance le modèle avec des outils. Ici, l'assistant n'a <strong>aucun outil</strong> et n'envoie rien : c'est la RH qui relit et décide.</p><p>Huit questions de relecture suffisent. Une réponse « non » : vous corrigez avant d'envoyer.</p><p class="key">On est au niveau du context engineering, avec un humain qui joue la boucle. C'est la bonne façon de commencer.</p>`},
+  {t:"Corriger le bon fichier",
+   x:`<p>Au premier essai de l'auteur, la DPAE trop précoce n'avait pas été vue : aucun document ne donnait le délai. Il a ajouté un mémo (un fait) et un contrôle des dates (une méthode). Au nouvel essai, l'alerte est apparue.</p><p>Basculez entre les deux essais dans l'animation.</p><p class="warn">L'auteur a changé plusieurs fichiers à la fois : il ne sait pas lequel a suffi. Pour savoir ce qui marche, changez un fichier à la fois.</p>`},
+  {t:"Monter en autonomie, marche par marche",
+   x:`<p>Chaque marche ajoute une pièce du harnais : une skill (la méthode qui voyage), un outil (lire Gmail), un déclencheur (une tâche planifiée). La relecture humaine reste à chaque marche.</p><p>En local, les mêmes couches deviennent des fichiers : <code>CLAUDE.md</code> pour les règles, <code>connaissances/</code> pour les faits, <code>.claude/skills/</code> pour la méthode, <code>MEMORY.md</code> pour garder les décisions.</p><p class="key">Avant tout usage réel : l'outil choisi par l'entreprise, avec le DPO, et un test sur quatre cas fictifs.</p>`}
+];
+
+/* scène 7 : curation */
+const RES=[
+  ["integration","procedure-integration","m"],["compte-rendu","procedure-compte-rendu","m"],["reponse","procedure-reponse-salarie","m"],
+  ["reperes","Repères administratifs","f"],["livret","Livret d'accueil","f"],["agenda","Agenda","f"],["info","Note informatique","f"],["accueil","Procédure d'accueil 2023","f"],["c24","Congés 2024","f"],["c26","Note congés 2026","f"]
+];
+const DEM={
+  arrivee:{sel:["integration","reperes","livret","agenda","info","accueil"],proc:"procedure-integration",faits:"repères, livret, agenda, note informatique, procédure d'accueil",cas:"Message + fiche de poste, mail, notes"},
+  reunion:{sel:["compte-rendu","agenda"],proc:"procedure-compte-rendu",faits:"agenda (pour comparer les dates)",cas:"Vos notes de réunion"},
+  question:{sel:["reponse","c24","c26","livret"],proc:"procedure-reponse-salarie",faits:"congés 2024, note congés 2026, livret",cas:"La question, sans nom ni motif personnel"}
+};
+function renderCtx(k){
+  const d=DEM[k];
+  document.getElementById('res').innerHTML=RES.map(([id,l,t])=>`<div class="it ${t}${d.sel.includes(id)?' sel':''}">${l}</div>`).join('');
+  document.getElementById('ctxw').innerHTML=
+   `<div class="lay kr"><b>Règles · toujours</b>Instructions du Projet</div>`+
+   `<div class="lay km flash"><b>Méthode · selon la demande</b>${d.proc}</div>`+
+   `<div class="lay kf flash"><b>Faits · utiles ici</b>${d.faits}</div>`+
+   `<div class="lay kc flash"><b>Cas · ce message</b>${d.cas}</div>`;
+  document.querySelectorAll('.picker button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));
+}
+document.querySelector('.picker').addEventListener('click',e=>{const b=e.target.closest('button');if(b)renderCtx(b.dataset.k)});
+renderCtx('arrivee');
+
+/* scène 8 : origine des alertes */
+const ORI=[
+  `<div><span class="o" style="--k:var(--blue)">fait</span><span class="o" style="--k:var(--green)">méthode</span></div><span>Le mémo « repères administratifs » donne le délai (au plus tôt 8 jours avant l'embauche). Le contrôle des dates de la procédure compare le 4/11 au 7/12.</span>`,
+  `<div><span class="o" style="--k:var(--orange)">règle</span><span class="o" style="--k:var(--blue)">fait</span></div><span>Le mail dit le 14, les notes disent le 7, et l'agenda place le manager au salon le 7. La règle impose de signaler sans choisir.</span>`,
+  `<div><span class="o" style="--k:var(--orange)">règle</span><span class="o" style="--k:var(--pale)">cas</span></div><span>Les notes disent « je ne sais plus ». La règle impose [à préciser] plutôt qu'une supposition.</span>`,
+  `<div><span class="o" style="--k:var(--orange)">règle</span><span class="o" style="--k:var(--green)">méthode</span></div><span>Les Instructions interdisent toute décision sur une personne, et la procédure cite le télétravail parmi ce qu'elle ne fait pas.</span>`
+];
+document.querySelectorAll('.vf').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.vf').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.getElementById('origin').innerHTML=ORI[+b.dataset.o];
+}));
+
+/* scène 10 : avant / après */
+document.querySelector('.toggle').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('.toggle button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.getElementById('ab').classList.toggle('after',b.dataset.v==='after');
+});
+
+/* navigation */
+const scenes=[...document.querySelectorAll('.scene')];
+const eb=document.getElementById('eb'),nt=document.getElementById('nt'),nx=document.getElementById('nx');
+const prev=document.getElementById('prev'),next=document.getElementById('next'),autoB=document.getElementById('auto');
+const dots=document.getElementById('dots');
+let cur=0,timer=null;const seen=new Set();
+N.forEach((n,i)=>{const b=document.createElement('button');b.className='dot';b.type='button';b.textContent=i+1;b.setAttribute('aria-label','Étape '+(i+1)+' : '+n.t);b.onclick=()=>{stopAuto();go(i)};dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(N.length-1,i));seen.add(cur);
+  scenes.forEach(s=>s.classList.remove('on'));
+  void scenes[cur].offsetWidth;
+  scenes[cur].classList.add('on');
+  eb.textContent='Étape '+(cur+1)+' sur '+N.length;nt.textContent=N[cur].t;nx.innerHTML=N[cur].x;
+  prev.disabled=cur===0;next.disabled=cur===N.length-1;
+  [...dots.children].forEach((d,k)=>{d.classList.toggle('cur',k===cur);d.classList.toggle('seen',seen.has(k)&&k!==cur)});
+}
+function stopAuto(){clearInterval(timer);timer=null;autoB.textContent='▶ Lecture auto'}
+prev.onclick=()=>{stopAuto();go(cur-1)};
+next.onclick=()=>{stopAuto();go(cur+1)};
+document.getElementById('replay').onclick=()=>go(cur);
+autoB.onclick=()=>{
+  if(timer){stopAuto();return}
+  if(cur===N.length-1)go(0);
+  autoB.textContent='❚❚ Pause';
+  timer=setInterval(()=>{if(cur>=N.length-1){stopAuto();return}go(cur+1)},12000);
+};
+document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('.sec,.copy'))return;
+  if(e.key==='ArrowRight'){stopAuto();go(cur+1)}
+  if(e.key==='ArrowLeft'){stopAuto();go(cur-1)}
+});
+go(0);
+
+/* exercice */
+const Q=[
+  ["N'invente jamais une date : écris [à préciser].","Règles","Elle vaut pour toutes les tâches : arrivée, compte rendu, réponse à un salarié."],
+  ["Pour une arrivée : une checklist de J-15 à J+30, une action par ligne.","Méthode","C'est la façon de faire une tâche précise : elle va dans la procédure d'intégration."],
+  ["La DPAE se fait au plus tôt 8 jours avant l'embauche (mémo de novembre 2026).","Faits","C'est un fait daté sur les obligations de l'entreprise : il va dans un document du Contexte."],
+  ["Inès commence le lundi 7 décembre.","Cas","Vrai pour ce dossier seulement : cela passe par la demande."],
+  ["Télétravail : un jour par semaine après la période d'essai (accord de 2024).","Faits","C'est une politique de l'entreprise, datée : un document du Contexte."],
+  ["Tu ne prends aucune décision sur une personne.","Règles","Un interdit général, valable pour toutes les tâches : les Instructions."],
+  ["Dans un compte rendu, une idée reste une idée : ne la présente pas comme une décision.","Méthode","Une règle propre à une tâche : elle va dans la procédure du compte rendu, pas dans les Instructions."],
+  ["Le manager m'écrit qu'il ne pourra pas accueillir Inès le premier jour.","Cas","C'est une pièce de ce dossier : le mail du manager, joint à la demande."]
+];
+const CH=["Règles","Méthode","Faits","Cas"];
+const quiz=document.getElementById('quiz'),score=document.getElementById('score');let good=0,done=0;
+Q.forEach(([q,a,why],i)=>{
+  const d=document.createElement('div');d.className='qitem';
+  d.innerHTML=`<blockquote>« ${q} »</blockquote><div class="qbtns">${CH.map(c=>`<button type="button">${c}</button>`).join('')}</div><p class="fb" aria-live="polite"></p>`;
+  const fb=d.querySelector('.fb');let answered=false;
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    d.querySelectorAll('button').forEach(x=>x.classList.remove('right','wrong'));
+    if(b.textContent===a){b.classList.add('right');fb.textContent='Exact. '+why;if(!answered){good++;}}
+    else{b.classList.add('wrong');fb.textContent='Pas tout à fait : essayez encore.'}
+    if(!answered&&b.textContent===a){answered=true;done++;score.textContent=good+' / '+Q.length+' trouvées'}
+  });
+  quiz.appendChild(d);
+});
+
+/* copier */
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
+  const pre=document.getElementById(b.dataset.copy),t=pre.textContent,l=b.textContent;
+  const ok=()=>{b.textContent='Copié';setTimeout(()=>b.textContent=l,1500)};
+  navigator.clipboard?.writeText(t).then(ok).catch(()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Texte sélectionné'});
+});
+</script>
+<a href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:9999;font:600 14px system-ui,sans-serif;background:#0f2a7a;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">← Menu</a>
