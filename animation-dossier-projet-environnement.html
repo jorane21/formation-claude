@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dossier, projet, environnement</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Même système que animation-memory-md.html : scène bleu nuit + pupitre de narration */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --fg:#0d1a3b; --muted:#56627c; --line:#d8deea;
+  --navy:#0f2a7a; --ok:#17784f; --ok-bg:#e4f4ec; --warn:#b4400f; --warn-bg:#fdeee5;
+  --stage:#0b1858; --stage-2:#16247a; --stage-3:#22318f; --stage-fg:#eef2fb; --stage-muted:#a3aed0;
+  --lime:#e2ff1a; --blue:#58a6ff; --orange:#ffad5c; --green:#6fe0a6; --red:#ff8a8a;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0f22; --surface:#131b34; --fg:#e6ebf7; --muted:#9ba7c2; --line:#27324f;
+  --navy:#a9c0ff; --ok:#5fd19b; --ok-bg:#12301f; --warn:#ff9a6b; --warn-bg:#3a1e12; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.05;margin:0;color:var(--navy);text-wrap:balance;letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+code,.mono{font-family:var(--f-mono)}
+
+/* ---------- Scène ---------- */
+.stage{position:relative;background:radial-gradient(120% 140% at 90% 0%,var(--stage-3) 0%,var(--stage) 60%);color:var(--stage-fg);border-radius:16px;min-height:440px;overflow:hidden}
+.stage::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border:28px solid var(--lime);border-radius:50%;opacity:.18;pointer-events:none}
+.scene{display:none;padding:26px clamp(14px,3.4vw,34px);gap:18px;position:relative;z-index:1;align-content:start}
+.scene.on{display:grid}
+.tag{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--stage-muted)}
+.big{font-family:var(--f-display);font-weight:800;font-size:clamp(1.3rem,2.8vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
+.big em{font-style:normal;color:var(--lime)}
+.scene.on .a{animation:rise .55s cubic-bezier(.3,.7,.2,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.note{font-size:.88rem;color:var(--stage-muted);margin:0}
+.note b{color:var(--stage-fg)}
+
+/* cartes */
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.card .ico{font-size:2rem;line-height:1}
+.card h3{margin:0;font-family:var(--f-display);font-size:1.3rem}
+.card .q{font-family:var(--f-mono);font-size:.8rem;color:var(--lime)}
+.card p{margin:0;font-size:.9rem;color:var(--stage-muted)}
+
+/* plan des emplacements (ordinateur) */
+.map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.place{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.25);border-radius:12px;padding:12px;display:grid;gap:8px;align-content:start;min-width:0}
+.place .path{font-family:var(--f-mono);font-size:.72rem;color:var(--stage-muted);overflow-wrap:anywhere}
+.fold{display:flex;align-items:center;gap:8px;background:var(--stage-2);border:2px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;font-size:.9rem;transition:all .35s;position:relative;min-width:0}
+.fold::before{content:"📁";font-size:1.05rem}
+.fold small{margin-left:auto;font-family:var(--f-mono);font-size:.66rem;color:var(--stage-muted);white-space:nowrap}
+.fold.lit{border-color:var(--lime);background:var(--stage-3);box-shadow:0 0 0 4px rgba(226,255,26,.15)}
+.fold.dim{opacity:.32}
+.fold.shared.lit{border-color:var(--orange);box-shadow:0 0 0 4px rgba(255,173,92,.2)}
+.fold .v{display:none;font-family:var(--f-mono);font-size:.66rem;background:var(--green);color:#0b1858;border-radius:999px;padding:1px 7px;margin-left:auto}
+.logo-new .fold .v{display:inline}
+.logo-new .fold .v + small{display:none}
+
+/* projet */
+.proj{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:center}
+.tree{font-family:var(--f-mono);font-size:clamp(.82rem,1.6vw,.98rem);line-height:1.8;background:var(--stage-2);border-radius:12px;padding:16px 20px;white-space:pre;overflow-x:auto;border:1px solid rgba(255,255,255,.12)}
+.tree .dim{color:var(--stage-muted)}
+.tree .hot{color:#0b1858;background:var(--lime);padding:1px 6px;border-radius:4px;font-weight:600}
+.scene.on .tree .hot{animation:glow 1.4s 1s ease-in-out 3 alternate}
+@keyframes glow{to{box-shadow:0 0 0 6px rgba(226,255,26,.25)}}
+.analogy{border:2px dashed var(--lime);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.analogy b{color:var(--lime);font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
+.analogy p{margin:0}
+
+/* trousseau */
+.ring{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.keys{background:var(--lime);color:#0b1858;border-radius:14px;padding:14px 16px;display:grid;gap:4px;justify-items:center;text-align:center;max-width:180px}
+.keys .ico{font-size:2.2rem;line-height:1}
+.keys b{font-family:var(--f-display);font-size:1.05rem;line-height:1.1}
+.keys span{font-size:.78rem}
+.scene.on .seq .fold.k{animation:keyon .5s var(--d) both}
+@keyframes keyon{from{border-color:rgba(255,255,255,.14);background:var(--stage-2);box-shadow:none}to{border-color:var(--lime);background:var(--stage-3);box-shadow:0 0 0 4px rgba(226,255,26,.15)}}
+.stay{font-family:var(--f-mono);font-size:.7rem;color:var(--green)}
+
+/* commandes dans la scène */
+.pick{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick .lbl{font-family:var(--f-mono);font-size:.75rem;color:var(--stage-muted);margin-right:4px}
+.chip{font:inherit;font-weight:600;font-size:.9rem;background:transparent;color:var(--stage-fg);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--lime);color:#0b1858;border-color:var(--lime)}
+.btn-lime{font:inherit;font-weight:600;background:var(--lime);color:#0b1858;border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn-ghost{font:inherit;font-weight:500;background:transparent;color:var(--stage-fg);border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:7px 14px;cursor:pointer}
+.status{font-family:var(--f-mono);font-size:.8rem;color:var(--green);min-height:1.2em}
+
+/* chat */
+.chat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:start}
+.win{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;min-width:0}
+.win-h{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1);font-family:var(--f-mono);font-size:.76rem;color:var(--stage-muted)}
+.win-h i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+.win-b{padding:12px;display:grid;gap:8px;min-height:180px;align-content:start}
+.bub{max-width:90%;padding:8px 12px;border-radius:12px;font-size:.9rem;line-height:1.4;animation:rise .4s both}
+.bub.me{justify-self:end;background:#f4f6ff;color:#0d1a3b;border-bottom-right-radius:3px}
+.bub.ai{justify-self:start;background:var(--stage-3);border:1px solid rgba(255,255,255,.15);border-bottom-left-radius:3px}
+.bub.ai.no{border-color:var(--red)}
+.bub .who{display:block;font-family:var(--f-mono);font-size:.68rem;opacity:.65;margin-bottom:2px}
+.bub.ai .who{color:var(--lime);opacity:1}
+.asks{display:grid;gap:8px}
+.ask{font:inherit;text-align:left;background:var(--stage-2);color:var(--stage-fg);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:9px 12px;cursor:pointer;font-size:.9rem}
+.ask:hover{border-color:var(--lime)}
+.mini{display:grid;gap:6px}
+.mini .fold{padding:6px 10px;font-size:.85rem}
+
+/* situations */
+.sits{display:grid;gap:10px}
+.sit{background:var(--stage-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.sit p{margin:0;font-size:.93rem}
+.sit .opts{display:flex;flex-wrap:wrap;gap:6px}
+.sit .opt{font:inherit;font-size:.82rem;background:transparent;color:var(--stage-fg);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 12px;cursor:pointer}
+.sit .opt.good{background:var(--green);color:#0b1858;border-color:var(--green)}
+.sit .opt.bad{background:rgba(255,138,138,.18);border-color:var(--red);color:var(--red)}
+.sit .fb{font-size:.84rem;color:var(--stage-muted);margin:0;min-height:1.2em}
+
+/* cas réel */
+.real{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:stretch}
+.plus{display:grid;place-items:center;font-family:var(--f-display);font-size:2rem;color:var(--lime)}
+.real .card h3{font-family:var(--f-mono);font-size:1rem}
+.real .card .role{font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--lime);line-height:1.1}
+.real .card ul{margin:0;padding-left:18px;font-size:.88rem;display:grid;gap:3px}
+.bridge{border:2px dashed var(--lime);border-radius:12px;padding:12px 16px;font-size:.92rem}
+.bridge b{color:var(--lime)}
+
+/* synthèse */
+.motto{font-family:var(--f-display);font-weight:800;font-size:clamp(1.2rem,2.8vw,1.8rem);text-align:center;margin:0;line-height:1.2}
+.motto em{font-style:normal;color:var(--lime)}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top}
+.tbl th{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--stage-muted);font-weight:600}
+.tbl td:first-child{font-weight:600;color:var(--lime);white-space:nowrap}
+.tblwrap{overflow-x:auto}
+
+/* ---------- Pupitre ---------- */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 26px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px)}
+.narr{min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.narr h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.25rem,2.5vw,1.65rem);margin:4px 0 8px;line-height:1.15;text-wrap:balance}
+.narr p{margin:0 0 8px;max-width:68ch}
+.narr .key{background:var(--ok-bg);color:var(--ok);padding:8px 12px;border-radius:8px;font-weight:500}
+.controls{display:flex;flex-direction:column;gap:10px;min-width:210px}
+.row{display:flex;gap:8px}
+button{font:inherit}
+.ctl{font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;cursor:pointer;flex:1}
+.ctl:hover{border-color:var(--navy)}
+.ctl.primary{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.ctl:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--f-mono);font-size:.72rem;cursor:pointer;padding:0}
+.dot.cur{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.dot.seen{border-color:var(--navy);color:var(--navy)}
+.hint{font-size:.75rem;color:var(--muted);text-align:center}
+
+/* ---------- Quiz ---------- */
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px clamp(16px,3vw,28px);display:grid;gap:14px}
+.quiz h2{font-family:var(--f-display);font-weight:800;font-size:1.4rem;margin:0;color:var(--navy)}
+.qq{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.qq p{margin:0;font-weight:600}
+.qq .opts{display:grid;gap:6px}
+.qq button{text-align:left;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+.qq button:hover{border-color:var(--navy)}
+.qq button.good{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:600}
+.qq button.bad{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.qq .why{margin:0;font-size:.9rem;color:var(--muted);min-height:1.2em}
+.score{font-family:var(--f-mono);font-size:.9rem;color:var(--ok)}
+
+/* ---------- Schéma synoptique (fond sombre comme la scène, dans les deux thèmes) ---------- */
+.syn{background:var(--stage);color:var(--stage-fg);border-radius:16px;padding:22px clamp(14px,3vw,30px);display:grid;gap:14px}
+.syn h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.25rem,2.5vw,1.65rem);margin:0;line-height:1.15}
+.syn .lead{margin:0;color:var(--stage-muted);font-size:.92rem;max-width:70ch}
+.layer{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:stretch}
+.rail{display:grid;align-content:center;gap:2px;border-right:2px solid rgba(255,255,255,.18);padding-right:12px}
+.rail .n{font-family:var(--f-display);font-weight:800;font-size:1.6rem;line-height:1;color:var(--lime)}
+.rail b{font-size:.88rem;line-height:1.2}
+.rail span{font-family:var(--f-mono);font-size:.68rem;color:var(--stage-muted)}
+.box{background:var(--stage-2);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:12px 14px;min-width:0}
+.box.you{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.box.you .who{font-family:var(--f-display);font-weight:800;font-size:1.1rem}
+.envbox{border:2px solid var(--lime);display:grid;gap:8px}
+.envbox .ttl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.envbox .ttl b{font-family:var(--f-display);font-size:1.05rem}
+.envbox .ttl small{font-family:var(--f-mono);font-size:.7rem;color:var(--stage-muted)}
+.addr{display:flex;flex-wrap:wrap;gap:6px}
+.addr code{font-size:.74rem;background:#081245;border:1px solid rgba(226,255,26,.35);border-radius:6px;padding:2px 8px;overflow-wrap:anywhere}
+.addr code.var{border-color:rgba(255,255,255,.2);color:var(--stage-muted)}
+.link-down{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px}
+.link-down div{font-family:var(--f-mono);font-size:.74rem;color:var(--lime);padding-left:10px;display:flex;gap:8px;align-items:center}
+.link-down div::before{content:"↓";font-size:1.3rem;line-height:1}
+.disk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.disk .place{background:rgba(255,255,255,.03)}
+.projbox{border:2px solid var(--orange);border-radius:10px;padding:8px;display:grid;gap:6px;position:relative}
+.projbox .ptag{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--orange)}
+.file-chip{display:flex;gap:8px;align-items:center;font-family:var(--f-mono);font-size:.8rem;background:#081245;border-radius:8px;padding:6px 9px;min-width:0}
+.file-chip::before{content:"📄"}
+.file-chip small{margin-left:auto;font-family:var(--f-body);font-size:.7rem;color:var(--stage-muted);white-space:nowrap}
+.syn .fold{padding:6px 10px;font-size:.85rem}
+.closed{position:relative}
+.closed small{color:var(--red)!important}
+.session{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.session .box{display:grid;gap:4px;align-content:start}
+.session .box .k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.session .box.how{border-left:4px solid var(--orange)}.session .box.how .k{color:var(--orange)}
+.session .box.what{border-left:4px solid var(--lime)}.session .box.what .k{color:var(--lime)}
+.session .box p{margin:0;font-size:.88rem}
+.session .box.no{grid-column:1/-1;border-left:4px solid var(--red);background:rgba(255,138,138,.08)}
+.session .box.no .k{color:var(--red)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.8rem;color:var(--stage-muted);border-top:1px solid rgba(255,255,255,.14);padding-top:12px}
+.legend span{display:flex;gap:6px;align-items:center}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.syn-motto{margin:0;text-align:center;font-family:var(--f-display);font-weight:800;font-size:clamp(1rem,2.2vw,1.3rem)}
+.syn-motto em{font-style:normal;color:var(--lime)}
+
+/* ---------- Schémas de fonctionnement (projet, environnement) ---------- */
+.flow{--ln:rgba(255,255,255,.32);--violet:#c3a8ff;display:grid;gap:0;justify-items:stretch}
+.nd{position:relative;background:var(--stage-2);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;text-align:center;font-size:.9rem;line-height:1.35;min-width:0;transition:opacity .3s,box-shadow .3s}
+.nd b{display:block;font-family:var(--f-display);font-size:1.02rem}
+.nd small{display:block;color:var(--stage-muted);font-size:.8rem}
+.nd.mission{background:var(--lime);color:#0b1858;border-color:var(--lime)}
+.nd.brain{background:var(--orange);color:#0b1858;border-color:var(--orange)}
+.nd.harn{background:var(--violet);color:#0b1858;border-color:var(--violet)}
+.nd.envn{background:var(--blue);color:#0b1858;border-color:var(--blue)}
+.nd.valid{background:var(--green);color:#0b1858;border-color:var(--green)}
+.nd.mission small,.nd.brain small,.nd.harn small,.nd.envn small,.nd.valid small{color:#2b3570}
+.nd.sub{border:1px solid rgba(88,166,255,.55)}
+.nd.chk{border:2px dashed rgba(255,255,255,.4);background:transparent}
+.nd.user{border:1px solid rgba(255,255,255,.35)}
+.nd.narrow{justify-self:center;width:min(100%,420px)}
+.pl{justify-self:center;display:inline-block;font-family:var(--f-mono);font-size:.74rem;line-height:1.35;background:#081245;border:1px solid var(--ln);border-radius:999px;padding:4px 12px;text-align:center;color:var(--stage-fg);transition:opacity .3s,box-shadow .3s}
+.pl.warn{border-color:var(--red);color:var(--red)}
+.vl{justify-self:center;width:2px;height:22px;background:var(--ln);position:relative}
+.vl::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ln);border-bottom:0}
+.vl.tall{height:30px}
+.fan{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px;position:relative;padding-top:20px}
+.fan::before{content:"";position:absolute;top:0;left:calc(50% / var(--n));right:calc(50% / var(--n));border-top:2px solid var(--ln)}
+.fan>*{position:relative}
+.fan>*::before{content:"";position:absolute;top:-20px;left:50%;height:20px;border-left:2px solid var(--ln)}
+.col3{display:grid;gap:0;justify-items:center;align-content:start}
+.col3 .vl{height:16px}
+/* schéma projet : échange harnais ⇄ cerveau */
+.d1mid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px;align-items:stretch}
+.d1left{display:grid;grid-template-rows:1fr auto 1fr;justify-items:center}
+.d1left .line{width:2px;background:var(--ln)}
+.d1left .line.end{position:relative}
+.d1left .line.end::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ln);border-bottom:0}
+.d1right{display:grid;gap:0;justify-items:center}
+.mob{display:none}
+.xch{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%}
+.xch .pl{width:100%;border-radius:12px;padding:6px 10px}
+.xch .pl i{font-style:normal;color:var(--lime);font-weight:700;margin-right:4px}
+/* schéma environnement */
+.d2top{display:grid;grid-template-columns:minmax(0,1.3fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.d2top .arr{font-size:1.4rem;color:var(--ln)}
+.grp{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.03);border-radius:14px;padding:30px 10px 10px;position:relative}
+.grp .gt{position:absolute;top:8px;left:0;right:0;text-align:center;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--stage-muted)}
+.grp .tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.d2chk{display:grid;grid-template-columns:minmax(0,.55fr) minmax(0,1.3fr) auto minmax(0,1.15fr);gap:10px;align-items:center}
+.d2chk .arr{font-size:1.4rem;color:var(--red);text-align:center}
+.loopbox{display:grid;gap:8px;border:1px dashed rgba(255,138,138,.5);border-radius:12px;padding:10px}
+.loopbox .pl{width:100%;border-radius:10px}
+.fnote{font-size:.85rem;color:var(--stage-muted);border-left:3px solid var(--lime);padding:6px 12px;margin:0}
+.fnote b{color:var(--stage-fg)}
+/* parcours pas à pas */
+.walk{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.walk .cap{font-size:.9rem;flex:1 1 260px;min-height:1.4em}
+.walk .cap b{color:var(--lime)}
+.flow.walking [data-s]{opacity:.28}
+.flow.walking [data-s].hl{opacity:1;box-shadow:0 0 0 4px rgba(226,255,26,.45)}
+.flow.walking [data-s].done{opacity:.55}
+
+@media (max-width:760px){
+  .d1mid{grid-template-columns:minmax(0,1fr)}
+  .d1left{grid-template-rows:auto;grid-auto-flow:row;gap:4px}
+  .d1left{order:2}.d1left .line:first-child{display:none}.mob{display:inline}
+  .d1left .line{height:14px}
+  .xch,.grp .tri{grid-template-columns:minmax(0,1fr)}
+  .fan{grid-template-columns:minmax(0,1fr);padding-top:0;gap:8px}
+  .fan::before,.fan>*::before{display:none}
+  .d2top,.d2chk{grid-template-columns:minmax(0,1fr)}
+  .d2top .arr,.d2chk .arr{transform:rotate(90deg);justify-self:center}
+  .d2chk .spacer{display:none}
+  .d2top .task{order:-2}.d2top .arr{order:-1;transform:rotate(-90deg)}
+  .col3 .vl:first-child{display:none}
+  .layer,.link-down{grid-template-columns:minmax(0,1fr)}
+  .rail{border-right:0;border-bottom:2px solid rgba(255,255,255,.18);padding:0 0 6px;grid-auto-flow:column;justify-content:start;align-items:baseline;gap:8px}
+  .link-down div{padding-left:4px}
+  .disk,.session{grid-template-columns:minmax(0,1fr)}
+  .three,.map,.proj,.chat,.real{grid-template-columns:minmax(0,1fr)}
+  .ring{grid-template-columns:minmax(0,1fr)}
+  .keys{max-width:none;grid-auto-flow:column;justify-content:center;gap:10px}
+  .plus{font-size:1.5rem}
+  .desk{grid-template-columns:minmax(0,1fr)}
+  .controls{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .scene.on *,.scene.on *::after,.bub{animation:none!important}
+  .scene.on .seq .fold.k{border-color:var(--lime);background:var(--stage-3)}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Dossier, projet, environnement</h1>
+    <p>Trois mots qui se ressemblent mais ne répondent pas à la même question. En 10 étapes, avec un formateur qui prépare aussi des offres commerciales, voici comment les distinguer et quand un environnement vous fait gagner du temps.</p>
+  </header>
+
+  <section class="stage" aria-live="polite">
+
+    <!-- 1. Trois mots -->
+    <div class="scene" data-i="0">
+      <div class="tag a">Trois mots qu'on confond</div>
+      <p class="big a" style="--d:.1s">Le dossier <em>range</em>, le projet <em>explique</em>, l'environnement <em>ouvre</em>.</p>
+      <div class="three">
+        <div class="card a" style="--d:.4s"><div class="ico">🗄️</div><h3>Dossier</h3><div class="q">Où sont mes fichiers ?</div><p>L'armoire où les documents sont rangés sur l'ordinateur.</p></div>
+        <div class="card a" style="--d:.8s"><div class="ico">📒</div><h3>Projet</h3><div class="q">Comment Claude travaille ?</div><p>Le classeur de mission : une notice (CLAUDE.md), un carnet (MEMORY.md), des documents.</p></div>
+        <div class="card a" style="--d:1.2s"><div class="ico">🔑</div><h3>Environnement</h3><div class="q">Quels dossiers j'ouvre ?</div><p>Le trousseau de clés qui ouvre plusieurs armoires à la fois en début de séance.</p></div>
+      </div>
+    </div>
+
+    <!-- 2. Dossier -->
+    <div class="scene" data-i="1">
+      <div class="tag a">1 · Le dossier</div>
+      <p class="big a" style="--d:.1s">Vos fichiers sont rangés <em>à plusieurs endroits</em>.</p>
+      <div class="map">
+        <div class="place a" style="--d:.4s"><div class="path">Documents / Formations</div><div class="fold">Programmes</div><div class="fold">Exercices</div></div>
+        <div class="place a" style="--d:.7s"><div class="path">Bureau</div><div class="fold">Charte graphique</div></div>
+        <div class="place a" style="--d:1s"><div class="path">Documents / Commercial</div><div class="fold">Tarifs</div><div class="fold">Références clients</div></div>
+      </div>
+      <p class="note a" style="--d:1.4s">Rien d'extraordinaire : c'est le rangement habituel de votre ordinateur. Chaque dossier a <b>une seule adresse</b>.</p>
+    </div>
+
+    <!-- 3. Projet -->
+    <div class="scene" data-i="2">
+      <div class="tag a">2 · Le projet</div>
+      <p class="big a" style="--d:.1s">Un projet dit à Claude <em>comment travailler</em> sur une activité.</p>
+      <div class="proj">
+        <div class="tree a" style="--d:.4s"><span class="dim">Formations/</span>
+├── <span class="hot">CLAUDE.md</span>     <span class="dim">← la notice</span>
+├── <span class="hot">MEMORY.md</span>     <span class="dim">← le carnet</span>
+├── Programmes/
+└── Exercices/</div>
+        <div class="analogy a" style="--d:.9s">
+          <b>Comme un classeur de mission</b>
+          <p>En première page, les consignes : « explique simplement, donne des exemples ».</p>
+          <p>Ensuite, le carnet : ce qui a été décidé, ce qu'on sait du public.</p>
+          <p>Le projet <strong>vit dans un dossier</strong>. Il ne dit rien des autres armoires.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Environnement -->
+    <div class="scene" data-i="3">
+      <div class="tag a">3 · L'environnement</div>
+      <p class="big a" style="--d:.1s">Un environnement est un <em>trousseau de clés</em> : il ouvre, il ne déplace rien.</p>
+      <div class="ring">
+        <div class="keys a" style="--d:.3s"><div class="ico">🔑</div><b>Préparer une formation</b><span>enregistré dans l'application</span></div>
+        <div class="map seq">
+          <div class="place"><div class="path">Documents / Formations</div><div class="fold k" style="--d:1s">Programmes<small class="stay">reste ici</small></div><div class="fold k" style="--d:1.5s">Exercices<small class="stay">reste ici</small></div></div>
+          <div class="place"><div class="path">Bureau</div><div class="fold k" style="--d:2s">Charte graphique<small class="stay">reste ici</small></div></div>
+          <div class="place"><div class="path">Documents / Commercial</div><div class="fold dim">Tarifs</div><div class="fold dim">Références clients</div></div>
+        </div>
+      </div>
+      <p class="note a" style="--d:2.6s">Trois dossiers, trois endroits, <b>aucune copie</b>. L'environnement se souvient seulement de leurs adresses (et, au besoin, de quelques réglages).</p>
+    </div>
+
+    <!-- 5. Interactif : deux environnements -->
+    <div class="scene" data-i="4" id="s-env">
+      <div class="tag a">4 · À vous · choisir l'environnement</div>
+      <div class="pick a" style="--d:.1s">
+        <span class="lbl">Environnement :</span>
+        <button class="chip" type="button" data-env="form" aria-pressed="true">Préparer une formation</button>
+        <button class="chip" type="button" data-env="offre" aria-pressed="false">Rédiger une offre commerciale</button>
+      </div>
+      <div class="map a" style="--d:.3s" id="envmap">
+        <div class="place"><div class="path">Documents / Formations</div><div class="fold" data-in="form">Programmes</div><div class="fold" data-in="form">Exercices</div></div>
+        <div class="place"><div class="path">Bureau</div><div class="fold shared" data-in="form offre">Charte graphique<span class="v">logo v2</span><small>partagé</small></div></div>
+        <div class="place"><div class="path">Documents / Commercial</div><div class="fold" data-in="offre">Tarifs</div><div class="fold" data-in="offre">Références clients</div></div>
+      </div>
+      <div class="pick a" style="--d:.5s">
+        <button class="btn-lime" type="button" id="logo">Remplacer le logo dans Charte graphique</button>
+        <button class="btn-ghost" type="button" id="logo-reset">Recommencer</button>
+        <span class="status" id="logo-st"></span>
+      </div>
+    </div>
+
+    <!-- 6. Interactif : changer de sujet -->
+    <div class="scene" data-i="5" id="s-chat">
+      <div class="tag a">5 · À vous · changer de sujet</div>
+      <div class="chat">
+        <div class="mini a" style="--d:.1s">
+          <div class="keys" style="max-width:none"><div class="ico">🔑</div><b>Préparer une formation</b><span>choisi en début de séance</span></div>
+          <div class="fold lit">Programmes</div><div class="fold lit">Exercices</div><div class="fold lit">Charte graphique</div><div class="fold dim">Tarifs</div>
+          <div class="asks">
+            <button class="ask" type="button" data-q="0">« Résume le programme du module 2. »</button>
+            <button class="ask" type="button" data-q="1">« Au fait, quelle est ma grille de tarifs ? »</button>
+            <button class="ask" type="button" data-q="2">« Mets le logo de la charte sur la page de garde. »</button>
+          </div>
+        </div>
+        <div class="win a" style="--d:.3s">
+          <div class="win-h"><i></i><i></i><i></i>Séance · Préparer une formation</div>
+          <div class="win-b" id="chatlog"><p class="note">Cliquez sur une question à gauche.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Interactif : quand est-ce utile -->
+    <div class="scene" data-i="6">
+      <div class="tag a">6 · À vous · faut-il un environnement ?</div>
+      <div class="sits" id="sits">
+        <div class="sit a" style="--d:.1s" data-good="dossier">
+          <p>Tous mes supports de formation sont rangés dans <b>Formations/</b>, avec ses sous-dossiers.</p>
+          <div class="opts"><button class="opt" type="button" data-a="dossier">Ouvrir le dossier suffit</button><button class="opt" type="button" data-a="projet">Un projet</button><button class="opt" type="button" data-a="env">Un environnement</button></div>
+          <p class="fb" data-fb="Oui : en ouvrant Formations/, ses sous-dossiers sont déjà accessibles."></p>
+        </div>
+        <div class="sit a" style="--d:.3s" data-good="projet">
+          <p>Je veux que Claude suive <b>toujours les mêmes consignes</b> et se souvienne de mon public de stagiaires.</p>
+          <div class="opts"><button class="opt" type="button" data-a="dossier">Ouvrir le dossier suffit</button><button class="opt" type="button" data-a="projet">Un projet</button><button class="opt" type="button" data-a="env">Un environnement</button></div>
+          <p class="fb" data-fb="Oui : consignes et mémoire, c'est le rôle du projet (CLAUDE.md + MEMORY.md)."></p>
+        </div>
+        <div class="sit a" style="--d:.5s" data-good="env">
+          <p>Chaque semaine, j'ouvre <b>Formations/</b>, <b>Charte graphique/</b> et <b>SEO/</b>, rangés à trois endroits différents.</p>
+          <div class="opts"><button class="opt" type="button" data-a="dossier">Ouvrir le dossier suffit</button><button class="opt" type="button" data-a="projet">Un projet</button><button class="opt" type="button" data-a="env">Un environnement</button></div>
+          <p class="fb" data-fb="Oui : la même combinaison de dossiers dispersés, régulièrement. Le temps gagné, c'est la préparation qu'on ne refait plus."></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Cas réel -->
+    <div class="scene" data-i="7">
+      <div class="tag a">7 · Cas réel de ce parcours</div>
+      <p class="big a" style="--d:.1s">Le projet explique, l'environnement <em>ouvre aussi le voisin</em>.</p>
+      <div class="real">
+        <div class="card a" style="--d:.4s"><h3>Claude-formation/</h3><div class="role">Le projet</div><ul><li>CLAUDE.md : les consignes</li><li>MEMORY.md : les décisions</li><li>le programme et les fiches</li></ul></div>
+        <div class="plus a" style="--d:.7s">+</div>
+        <div class="card a" style="--d:1s"><h3>SEO-GEO/</h3><div class="role">Un dossier ressource</div><ul><li>un audit SEO et GEO</li><li>sa fiche texte</li><li>rangé à côté, jamais copié</li></ul></div>
+      </div>
+      <div class="bridge a" style="--d:1.4s"><b>Résultat :</b> une séance ouverte sur Claude-formation voit aussi SEO-GEO. Une consigne dans CLAUDE.md dit <em>quand</em> y aller : dès qu'une leçon touche au référencement.</div>
+    </div>
+
+    <!-- 9. Qui commande ? -->
+    <div class="scene" data-i="8">
+      <div class="tag a">8 · Plusieurs dossiers : qui commande ?</div>
+      <p class="big a" style="--d:.1s">Le dossier sur lequel vous ouvrez la séance est le <em>chef d'orchestre</em>.</p>
+      <div class="three">
+        <div class="card a" style="--d:.4s"><div class="ico">🎼</div><h3>Dossier principal</h3><div class="q">ses consignes sont chargées</div><p>Son <code>CLAUDE.md</code> est lu dès le début : ce sont <strong>les</strong> consignes de la séance.</p></div>
+        <div class="card a" style="--d:.8s"><div class="ico">📚</div><h3>Dossier ajouté</h3><div class="q">un réservoir</div><p>Son <code>CLAUDE.md</code> n'est <strong>pas chargé par défaut</strong> : c'est un fichier à lire si une consigne du dossier principal y renvoie.</p></div>
+        <div class="card a" style="--d:1.2s"><div class="ico">🧰</div><h3>Skills de même nom</h3><div class="q">un ordre fixe</div><p>Entreprise, puis personnel, puis projet. Celui d'un dossier ajouté passe après, sous un nom préfixé : <code>/seo-geo:audit</code>.</p></div>
+      </div>
+      <div class="bridge a" style="--d:1.6s"><b>Attention :</b> les consignes chargées s'additionnent, aucune n'écrase l'autre. Si deux consignes se contredisent, Claude peut suivre l'une ou l'autre. Évitez les contradictions et les noms de skills en double.</div>
+    </div>
+
+    <!-- 10. Synthèse -->
+    <div class="scene" data-i="8">
+      <div class="tag a">À retenir</div>
+      <p class="motto a" style="--d:.1s">Le dossier <em>range</em>. Le projet <em>explique</em>. L'environnement <em>ouvre</em>.</p>
+      <div class="tblwrap a" style="--d:.5s">
+        <table class="tbl">
+          <thead><tr><th></th><th>Répond à</th><th>Contient des fichiers ?</th><th>Qui le choisit ?</th></tr></thead>
+          <tbody>
+            <tr><td>Dossier</td><td>Où sont mes fichiers ?</td><td>Oui</td><td>Vous, en rangeant</td></tr>
+            <tr><td>Projet</td><td>Comment Claude doit travailler ?</td><td>Oui : consignes, mémoire, documents</td><td>Vous, une fois par activité</td></tr>
+            <tr><td>Environnement</td><td>Quels dossiers ouvrir en début de séance ?</td><td>Non : seulement des adresses et des réglages</td><td>Vous, au début de chaque séance</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note a" style="--d:.9s"><b>Variables d'environnement :</b> des réglages techniques, à laisser vides pour travailler sur de simples documents.</p>
+    </div>
+
+  </section>
+
+  <section class="desk">
+    <div class="narr">
+      <div class="eyebrow" id="eb">Étape 1</div>
+      <h2 id="nt"></h2>
+      <div id="nx"></div>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <button class="ctl" type="button" id="prev" aria-label="Étape précédente">←</button>
+        <button class="ctl primary" type="button" id="next" aria-label="Étape suivante">→</button>
+      </div>
+      <div class="row">
+        <button class="ctl" type="button" id="auto">▶ Lecture auto</button>
+        <button class="ctl" type="button" id="replay">↻ Rejouer</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Flèches ← → du clavier</div>
+    </div>
+  </section>
+
+  <!-- Schéma A : fonctionnement d'un projet -->
+  <section class="syn" aria-labelledby="sa-t">
+    <h2 id="sa-t">Schéma A · Comment fonctionne un projet</h2>
+    <p class="lead">Un projet confie une mission. Le harnais organise le travail et dialogue avec le modèle d'IA, le « cerveau », jusqu'à obtenir un résultat prêt à valider.</p>
+    <div class="walk">
+      <button class="btn-lime" type="button" data-walk="a">▶ Suivre le parcours</button>
+      <button class="btn-ghost" type="button" data-walk-reset="a">Tout afficher</button>
+      <span class="cap" id="cap-a">Cliquez pour voir les étapes une par une.</span>
+    </div>
+    <div class="flow" id="flow-a">
+      <div class="nd mission narrow" data-s="1"><b>Projet</b>Rédiger une invitation prête à envoyer</div>
+      <div class="d1mid">
+        <div class="d1left">
+          <div class="line"></div>
+          <span class="pl" data-s="2"><span class="mob">Le projet </span>confie l'organisation<span class="mob"> au harnais</span></span>
+          <div class="line end"></div>
+        </div>
+        <div class="d1right">
+          <div class="vl"></div>
+          <div class="nd brain" data-s="3" style="width:100%"><b>Cerveau</b>Modèle d'IA</div>
+          <div class="vl" style="height:14px;background:transparent"></div>
+          <div class="xch">
+            <span class="pl" data-s="4"><i>↓</i>Renvoie un brouillon ou signale un manque</span>
+            <span class="pl" data-s="3"><i>↑</i>Fournit les consignes, le contexte et les outils autorisés</span>
+          </div>
+          <div class="vl"></div>
+        </div>
+      </div>
+      <div class="nd harn narrow" data-s="2"><b>Harnais</b>Organise le travail</div>
+      <div class="vl"></div>
+      <div class="fan" style="--n:4">
+        <div class="nd sub" data-s="2"><b>Cadrage</b>Objectif, public, format et critères de réussite</div>
+        <div class="nd sub" data-s="2"><b>Sources et accès</b>Dossiers consultables, outils et permissions</div>
+        <div class="nd sub" data-s="5"><b>Déroulement et contrôles</b>Étapes, relecture par l'IA et validation humaine</div>
+        <div class="nd sub" data-s="5"><b>Suivi</b>Décisions, corrections et versions, si leur enregistrement est prévu</div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--lime)"></i>Projet : la mission</span>
+      <span><i style="background:#c3a8ff"></i>Harnais : l'organisation</span>
+      <span><i style="background:var(--orange)"></i>Cerveau : le modèle d'IA</span>
+      <span><i style="background:var(--stage-2);border:1px solid var(--blue)"></i>Ce que le harnais prend en charge</span>
+    </div>
+  </section>
+
+  <!-- Schéma B : fonctionnement d'un environnement -->
+  <section class="syn" aria-labelledby="sb-t">
+    <h2 id="sb-t">Schéma B · Comment fonctionne un environnement</h2>
+    <p class="lead">Un environnement réunit plusieurs dossiers et des règles communes. Le harnais du projet y puise ce qui sert à la tâche, vérifie qu'il ne manque rien, puis le modèle d'IA rédige.</p>
+    <div class="walk">
+      <button class="btn-lime" type="button" data-walk="b">▶ Suivre le parcours</button>
+      <button class="btn-ghost" type="button" data-walk-reset="b">Tout afficher</button>
+      <span class="cap" id="cap-b">Cliquez pour voir les étapes une par une.</span>
+    </div>
+    <div class="flow" id="flow-b">
+      <div class="nd envn narrow" data-s="1"><b>Environnement</b>Communication événementielle</div>
+      <div class="vl"></div>
+      <div class="nd sub narrow" data-s="1"><b>Règles communes de l'environnement</b>Définies par la personne qui le configure<small>Quel dossier fait référence pour chaque sujet ? Quand utiliser chaque skill ?</small></div>
+      <div class="vl"></div>
+      <span class="pl" data-s="1">Règles à appliquer</span>
+      <div class="vl"></div>
+      <div class="d2top">
+        <div class="nd harn" data-s="2"><b>Harnais du projet</b>Coordonne les dossiers<small>Sélectionne les sources et les skills utiles à la tâche</small></div>
+        <div class="arr" aria-hidden="true">←</div>
+        <div class="nd user task" data-s="2"><b>Tâche de l'utilisateur</b>Rédiger une invitation pour les adhérents</div>
+      </div>
+      <div class="fan" style="--n:3">
+        <div class="col3"><div class="vl"></div><span class="pl" data-s="3">Cherche les faits confirmés</span><div class="vl"></div></div>
+        <div class="col3"><div class="vl"></div><span class="pl" data-s="3">Consulte les règles de ton</span><div class="vl"></div></div>
+        <div class="col3"><div class="vl"></div><span class="pl" data-s="3">Sélectionne la méthode de rédaction</span><div class="vl"></div></div>
+      </div>
+      <div class="grp">
+        <div class="gt">Dossiers attachés à l'environnement</div>
+        <div class="tri">
+          <div class="nd sub" data-s="3"><b>📁 Événement</b>Fiche de l'événement<small>Référence pour la date et le lieu</small></div>
+          <div class="nd sub" data-s="3"><b>📁 Marque</b>Charte et consignes de ton<small>Skill de relecture</small></div>
+          <div class="nd sub" data-s="3"><b>📁 Communication</b>Exemples et modèles<small>Skill de rédaction</small></div>
+        </div>
+      </div>
+      <div class="vl tall"></div>
+      <div class="d2chk">
+        <div class="spacer"></div>
+        <div class="nd chk" data-s="4"><b>Le harnais vérifie les éléments réunis</b>Les faits nécessaires sont-ils disponibles ?<br>Les règles permettent-elles de trancher les contradictions ?</div>
+        <div class="arr" aria-hidden="true">⇄</div>
+        <div class="loopbox" data-s="5">
+          <span class="pl warn">Un point reste à résoudre</span>
+          <div class="nd user"><b>👤 L'utilisateur</b>précise le fait manquant ou tranche entre deux consignes</div>
+          <span class="pl">Précision prise en compte : retour à la vérification</span>
+        </div>
+      </div>
+      <div class="vl"></div>
+      <span class="pl" data-s="6">Oui</span>
+      <div class="vl"></div>
+      <div class="nd brain narrow" data-s="6"><b>Modèle d'IA</b>Rédige l'invitation, puis la relit selon la charte</div>
+      <div class="vl"></div>
+      <div class="nd valid narrow" data-s="7"><b>Invitation soumise à l'utilisateur</b>pour validation</div>
+    </div>
+    <p class="fnote"><b>Où vivent les « règles communes » ?</b> L'environnement lui-même ne contient aucun fichier. En pratique, ces règles s'écrivent dans le <code>CLAUDE.md</code> du dossier principal, le chef d'orchestre (étape 9) : l'environnement ouvre les dossiers, le dossier principal dit lequel fait référence et quand utiliser chaque skill.</p>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>Environnement</span>
+      <span><i style="background:#c3a8ff"></i>Harnais du projet</span>
+      <span><i style="background:var(--stage-2);border:1px solid var(--blue)"></i>Dossiers et règles</span>
+      <span><i style="border:2px dashed rgba(255,255,255,.5)"></i>Contrôle</span>
+      <span><i style="background:var(--orange)"></i>Modèle d'IA</span>
+      <span><i style="background:var(--green)"></i>Validation humaine</span>
+    </div>
+  </section>
+
+  <section class="syn" aria-labelledby="syn-t">
+    <h2 id="syn-t">Schéma synoptique : qui fait quoi pendant une séance</h2>
+    <p class="lead">Le même exemple, vu d'un seul coup d'œil : vous choisissez un environnement, il ouvre des dossiers sans les déplacer, et Claude travaille avec deux choses distinctes : les consignes du projet et les dossiers ouverts.</p>
+
+    <div class="layer">
+      <div class="rail"><span class="n">1</span><b>Vous</b><span>début de séance</span></div>
+      <div class="box you"><span class="who">👤 Vous</span><span>choisissez l'environnement <strong>« Préparer une formation »</strong>. Ce choix vaut pour toute la séance.</span></div>
+    </div>
+    <div class="link-down"><span></span><div>active</div></div>
+
+    <div class="layer">
+      <div class="rail"><span class="n">2</span><b>Environnement</b><span>dans l'application</span></div>
+      <div class="box envbox">
+        <div class="ttl"><b>🔑 Préparer une formation</b><small>une configuration enregistrée · aucun fichier dedans</small></div>
+        <div class="addr">
+          <code>Documents/Formations</code><code>Bureau/Charte graphique</code><code class="var">variables d'environnement : vide</code>
+        </div>
+      </div>
+    </div>
+    <div class="link-down"><span></span><div>ouvre ces adresses, sans rien copier</div></div>
+
+    <div class="layer">
+      <div class="rail"><span class="n">3</span><b>Dossiers</b><span>sur l'ordinateur</span></div>
+      <div class="disk">
+        <div class="place"><div class="path">Documents / Formations</div>
+          <div class="projbox">
+            <div class="ptag">Projet</div>
+            <div class="file-chip">CLAUDE.md<small>la notice</small></div>
+            <div class="file-chip">MEMORY.md<small>le carnet</small></div>
+            <div class="fold lit">Programmes</div>
+            <div class="fold lit">Exercices</div>
+          </div>
+        </div>
+        <div class="place"><div class="path">Bureau</div><div class="fold lit">Charte graphique<small>ouvert</small></div></div>
+        <div class="place"><div class="path">Documents / Commercial</div><div class="fold dim closed">Tarifs<small>fermé</small></div><div class="fold dim closed">Références clients<small>fermé</small></div></div>
+      </div>
+    </div>
+    <div class="link-down"><span></span><div>Claude lit et travaille</div></div>
+
+    <div class="layer">
+      <div class="rail"><span class="n">4</span><b>Séance Claude</b><span>pendant le travail</span></div>
+      <div class="session">
+        <div class="box how"><span class="k">Comment travailler · le projet</span><p>Claude relit <code>CLAUDE.md</code> (les consignes) et <code>MEMORY.md</code> (les décisions) avant de répondre.</p></div>
+        <div class="box what"><span class="k">Avec quoi · l'environnement</span><p>Il lit et utilise les dossiers ouverts : Programmes, Exercices, Charte graphique.</p></div>
+        <div class="box no"><span class="k">Hors de portée</span><p>Tarifs et Références clients restent fermés, même si vous en parlez. Pour y accéder : nouvelle séance avec « Rédiger une offre commerciale », ou ajout du dossier.</p></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--orange)"></i>Projet : consignes + mémoire d'une activité</span>
+      <span><i style="background:var(--lime)"></i>Ouvert par l'environnement</span>
+      <span><i style="background:rgba(255,255,255,.2)"></i>Fermé dans cette séance</span>
+    </div>
+    <p class="syn-motto">Le projet dit <em>comment</em>. L'environnement dit <em>avec quoi</em>.</p>
+  </section>
+
+  <section class="quiz" id="quiz">
+    <h2>Quiz : 6 questions</h2>
+    <div class="score" id="score"></div>
+  </section>
+</div>
+
+<script>
+const N = [
+  {t:"Trois mots, trois questions",
+   x:`<p>Quand on travaille avec une IA sur ses propres fichiers, on entend parler de <strong>dossier</strong>, de <strong>projet</strong> et d'<strong>environnement</strong>. Ils se ressemblent, mais chacun répond à une question différente.</p><p class="key">Où sont mes fichiers ? Comment Claude doit-il travailler ? Quels dossiers j'ouvre en début de séance ?</p>`},
+  {t:"Le dossier : là où sont rangés les fichiers",
+   x:`<p>Imaginez un formateur qui prépare aussi des offres commerciales. Ses fichiers sont rangés comme sur tout ordinateur : certains dans <code>Documents/Formations</code>, d'autres sur le Bureau, d'autres dans <code>Documents/Commercial</code>.</p><p>Chaque dossier a une seule adresse. C'est le point de départ.</p>`},
+  {t:"Le projet : la notice et le carnet d'une activité",
+   x:`<p>Un projet rassemble ce dont Claude a besoin pour <strong>une activité</strong> : les consignes (<code>CLAUDE.md</code>), la mémoire (<code>MEMORY.md</code>) et les documents de référence (voir Leçon 1.4).</p><p class="key">Le projet répond à « comment travailler ». Il ne dit pas quelles autres armoires ouvrir.</p>`},
+  {t:"L'environnement : un trousseau de clés",
+   x:`<p>Un environnement est une <strong>configuration que vous enregistrez dans l'application</strong> pour retrouver un ou plusieurs dossiers, et éventuellement des réglages, lorsque vous commencez une nouvelle séance.</p><p class="key">Les fichiers restent à leur emplacement habituel. Le trousseau ne contient aucun dossier : il permet seulement de les ouvrir.</p>`},
+  {t:"Un même dossier, deux activités",
+   x:`<p>Basculez entre les deux environnements : les dossiers accessibles changent, mais <strong>Charte graphique</strong> est dans les deux.</p><p>Cliquez ensuite sur <strong>« Remplacer le logo »</strong> : la nouvelle version est accessible dans les deux environnements, sans duplication.</p><p class="key">Un dossier, une adresse, plusieurs trousseaux qui l'ouvrent.</p>`},
+  {t:"Changer de sujet ne change pas les dossiers",
+   x:`<p><strong>C'est vous qui choisissez l'environnement</strong> au début de la séance. Parler de tarifs dans la conversation n'ouvre pas le dossier Tarifs.</p><p>Essayez les trois questions : Claude répond à partir de ce qui est ouvert, et dit ce qu'il ne peut pas lire.</p><p class="key">Besoin d'un autre dossier ? Ouvrez une séance avec le bon environnement, ou ajoutez le dossier.</p>`},
+  {t:"Quand un environnement est-il utile ?",
+   x:`<p>Si tout est déjà rangé dans un même dossier, l'ouvrir suffit : ses sous-dossiers sont déjà accessibles.</p><p>L'environnement devient intéressant lorsque vous réunissez <strong>régulièrement la même combinaison de dossiers situés à différents endroits</strong>.</p><p class="key">Le temps gagné vient de la préparation que vous évitez de répéter.</p>`},
+  {t:"Projet et environnement travaillent ensemble",
+   x:`<p>Dans ce parcours, <code>Claude-formation</code> est un projet (consignes, mémoire, programme). Le dossier voisin <code>SEO-GEO</code> contient un audit SEO.</p><p>Pour « convoquer » le SEO dans la formation, on a rendu <code>SEO-GEO</code> accessible depuis le projet, et ajouté dans <code>CLAUDE.md</code> une consigne qui dit quand s'en servir. Rien n'a été copié.</p><p class="key">Le projet dit comment travailler. L'environnement donne accès aux bons dossiers.</p>`},
+  {t:"Plusieurs dossiers ouverts : qui commande ?",
+   x:`<p>Chaque dossier peut contenir ses propres consignes (<code>CLAUDE.md</code>) et ses skills. Aucun n'écrase les autres d'office, mais <strong>le dossier sur lequel vous ouvrez la séance dirige</strong>.</p><p>Dans ce parcours, le <code>CLAUDE.md</code> de <code>SEO-GEO</code> n'est pas chargé automatiquement : c'est la consigne du projet formation qui dit « lis d'abord <code>SEO-GEO/CLAUDE.md</code> ».</p><p class="key">Un seul chef d'orchestre, des consignes qui ne se contredisent pas, des skills aux noms uniques.</p><p><small>Règles de Claude Code (documentation officielle). En cas de doute : « Quelles consignes et quels skills as-tu chargés ? »</small></p>`},
+  {t:"À retenir",
+   x:`<p>Le dossier range, le projet explique, l'environnement ouvre. Le dossier principal commande.</p><p>Dans l'écran de Claude, la rubrique <strong>Variables d'environnement</strong> sert à des réglages techniques : pour de simples documents, laissez-la vide.</p><p>Dans l'application ChatGPT sur Mac, une organisation comparable existe avec un <strong>projet local</strong>, lorsque le travail local est activé pour votre compte (<a href="https://learn.chatgpt.com/docs/projects" target="_blank" rel="noopener">documentation OpenAI</a>).</p><p>Le quiz juste en dessous vérifie que tout est clair.</p>`}
+];
+
+const scenes=[...document.querySelectorAll('.scene')];
+const eb=document.getElementById('eb'),nt=document.getElementById('nt'),nx=document.getElementById('nx');
+const prev=document.getElementById('prev'),next=document.getElementById('next'),autoB=document.getElementById('auto');
+const dots=document.getElementById('dots');
+let cur=0,timer=null;const seen=new Set();
+N.forEach((n,i)=>{const b=document.createElement('button');b.className='dot';b.type='button';b.textContent=i+1;b.setAttribute('aria-label','Étape '+(i+1)+' : '+n.t);b.onclick=()=>{stopAuto();go(i)};dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(N.length-1,i));seen.add(cur);
+  scenes.forEach(s=>s.classList.remove('on'));
+  void scenes[cur].offsetWidth;
+  scenes[cur].classList.add('on');
+  eb.textContent='Étape '+(cur+1)+' sur '+N.length;nt.textContent=N[cur].t;nx.innerHTML=N[cur].x;
+  prev.disabled=cur===0;next.disabled=cur===N.length-1;
+  [...dots.children].forEach((d,k)=>{d.classList.toggle('cur',k===cur);d.classList.toggle('seen',seen.has(k)&&k!==cur)});
+}
+function stopAuto(){clearInterval(timer);timer=null;autoB.textContent='▶ Lecture auto'}
+prev.onclick=()=>{stopAuto();go(cur-1)};
+next.onclick=()=>{stopAuto();go(cur+1)};
+document.getElementById('replay').onclick=()=>go(cur);
+autoB.onclick=()=>{
+  if(timer){stopAuto();return}
+  if(cur===N.length-1)go(0);
+  autoB.textContent='❚❚ Pause';
+  timer=setInterval(()=>{if(cur>=N.length-1){stopAuto();return}go(cur+1)},11000);
+};
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('.quiz'))return;
+  if(e.key==='ArrowRight'){stopAuto();go(cur+1)}
+  if(e.key==='ArrowLeft'){stopAuto();go(cur-1)}
+});
+
+/* Étape 5 : choix d'environnement + logo partagé */
+const envmap=document.getElementById('envmap'),logoSt=document.getElementById('logo-st');
+let env='form';
+function paint(){
+  envmap.querySelectorAll('.fold').forEach(f=>{const on=f.dataset.in.split(' ').includes(env);f.classList.toggle('lit',on);f.classList.toggle('dim',!on)});
+  document.querySelectorAll('[data-env]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.env===env));
+  if(envmap.classList.contains('logo-new'))logoSt.textContent='✓ Logo v2 visible dans « '+(env==='form'?'Préparer une formation':'Rédiger une offre commerciale')+' » aussi.';
+}
+document.querySelectorAll('[data-env]').forEach(b=>b.onclick=()=>{env=b.dataset.env;paint()});
+document.getElementById('logo').onclick=()=>{envmap.classList.add('logo-new');logoSt.textContent='✓ Remplacé une seule fois. Changez d\'environnement pour vérifier.'};
+document.getElementById('logo-reset').onclick=()=>{envmap.classList.remove('logo-new');logoSt.textContent='';env='form';paint()};
+paint();
+
+/* Étape 6 : conversation */
+const R=[
+  ["Résume le programme du module 2.","Le module 2 porte sur l'écriture d'un bon prompt : 3 séquences de 45 min, avec un exercice sur une relance client. (lu dans Programmes/)",false],
+  ["Au fait, quelle est ma grille de tarifs ?","Je n'ai pas accès au dossier Tarifs dans cette séance : l'environnement « Préparer une formation » ne l'ouvre pas. Ouvrez une séance avec « Rédiger une offre commerciale », ou ajoutez ce dossier.",true],
+  ["Mets le logo de la charte sur la page de garde.","C'est fait : j'ai repris le logo du dossier Charte graphique, ouvert dans cette séance.",false]
+];
+const log=document.getElementById('chatlog');
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{
+  const [q,a,no]=R[b.dataset.q];
+  if(log.querySelector('.note'))log.innerHTML='';
+  log.insertAdjacentHTML('beforeend',`<div class="bub me"><span class="who">Vous</span>${q}</div><div class="bub ai${no?' no':''}"><span class="who">Claude</span>${a}</div>`);
+  log.lastElementChild.scrollIntoView({block:'nearest'});
+});
+
+/* Étape 7 : situations */
+document.querySelectorAll('.sit').forEach(s=>s.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+  s.querySelectorAll('.opt').forEach(x=>x.classList.remove('good','bad'));
+  const fb=s.querySelector('.fb');
+  if(o.dataset.a===s.dataset.good){o.classList.add('good');fb.textContent=fb.dataset.fb}
+  else{o.classList.add('bad');fb.textContent='Pas tout à fait. Relisez la question : où sont les fichiers, et que demande-t-on à Claude ?'}
+}));
+
+/* Quiz */
+const Q=[
+  ["Que contient un environnement ?",["Une copie des fichiers des dossiers choisis","Une configuration qui indique quels dossiers et réglages ouvrir","Les consignes et la mémoire de Claude"],1,"Il retient des adresses et des réglages. Les fichiers restent à leur place."],
+  ["Vous remplacez le logo dans Charte graphique, partagé par deux environnements. Que se passe-t-il ?",["Il faut le remplacer aussi dans l'autre environnement","La nouvelle version est visible dans les deux","Seul l'environnement ouvert voit le nouveau logo"],1,"Un seul dossier, une seule adresse : pas de duplication."],
+  ["Dans l'environnement « Préparer une formation », vous demandez votre grille de tarifs. Que se passe-t-il ?",["Claude ouvre automatiquement le dossier Tarifs","Claude n'y a pas accès : c'est vous qui choisissez l'environnement","Claude change d'environnement tout seul"],1,"Changer de sujet ne change pas les dossiers associés."],
+  ["Tous vos supports de formation sont rangés dans un seul dossier. Que faut-il ?",["Ouvrir ce dossier suffit","Créer un environnement","Dupliquer les fichiers"],0,"Ses sous-dossiers sont déjà accessibles."],
+  ["Où écrit-on comment Claude doit travailler sur une activité ?",["Dans l'environnement","Dans le projet (CLAUDE.md)","Dans les variables d'environnement"],1,"Le projet explique, l'environnement ouvre."],
+  ["Séance ouverte sur Formations ; le dossier SEO, ajouté, a aussi un CLAUDE.md. Quelles consignes Claude suit-il ?",["Celles du dossier SEO, ajouté en dernier","Celles de Formations ; le CLAUDE.md du SEO n'est qu'un fichier à lire, sauf si une consigne l'y renvoie","Il fusionne toujours les deux"],1,"Le dossier principal est le chef d'orchestre."]
+];
+const quiz=document.getElementById('quiz'),score=document.getElementById('score');
+const ok=new Set();
+Q.forEach(([q,opts,good,why],i)=>{
+  const d=document.createElement('div');d.className='qq';
+  d.innerHTML=`<p>${i+1}. ${q}</p><div class="opts">${opts.map((o,k)=>`<button type="button" data-k="${k}">${String.fromCharCode(97+k)}) ${o}</button>`).join('')}</div><p class="why"></p>`;
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    d.querySelectorAll('button').forEach(x=>x.classList.remove('good','bad'));
+    const right=+b.dataset.k===good;
+    b.classList.add(right?'good':'bad');
+    d.querySelector('.why').textContent=right?'✓ '+why:'Essayez encore.';
+    right?ok.add(i):ok.delete(i);
+    score.textContent=ok.size+' / '+Q.length+' bonnes réponses';
+  });
+  quiz.insertBefore(d,score);
+});
+
+/* Schémas A et B : parcours pas à pas */
+const WALK={
+  a:["<b>1 · Le projet</b> fixe la mission : rédiger une invitation prête à envoyer.",
+     "<b>2 · Le harnais</b> reçoit la mission et l'organise : cadrage, sources et accès autorisés.",
+     "<b>3 · Il transmet au cerveau</b> les consignes, le contexte et les outils autorisés.",
+     "<b>4 · Le cerveau répond</b> par un brouillon, ou signale ce qui lui manque.",
+     "<b>5 · Le harnais contrôle et garde trace</b> : relecture, validation humaine, décisions et versions."],
+  b:["<b>1 · L'environnement</b> apporte ses règles communes : quel dossier fait référence, quand utiliser chaque skill.",
+     "<b>2 · La tâche arrive</b> : le harnais du projet sélectionne les sources et les skills utiles.",
+     "<b>3 · Il puise dans les dossiers</b> : les faits dans Événement, le ton dans Marque, la méthode dans Communication.",
+     "<b>4 · Il vérifie</b> que les faits sont là et que les règles permettent de trancher.",
+     "<b>5 · S'il reste un point</b>, il vous le demande ; votre précision revient à la vérification.",
+     "<b>6 · Tout est réuni</b> : le modèle d'IA rédige l'invitation, puis la relit selon la charte.",
+     "<b>7 · Vous validez</b> l'invitation avant de l'envoyer."]
+};
+const wpos={a:0,b:0};
+function paintWalk(k){
+  const f=document.getElementById('flow-'+k),n=wpos[k];
+  f.classList.toggle('walking',n>0);
+  f.querySelectorAll('[data-s]').forEach(e=>{const s=+e.dataset.s;e.classList.toggle('hl',s===n);e.classList.toggle('done',s<n)});
+  document.getElementById('cap-'+k).innerHTML=n?WALK[k][n-1]:'Cliquez pour voir les étapes une par une.';
+  document.querySelector(`[data-walk="${k}"]`).textContent=n===0?'▶ Suivre le parcours':n<WALK[k].length?'Étape suivante →':'↻ Recommencer';
+}
+document.querySelectorAll('[data-walk]').forEach(b=>b.onclick=()=>{const k=b.dataset.walk;wpos[k]=wpos[k]>=WALK[k].length?1:wpos[k]+1;paintWalk(k)});
+document.querySelectorAll('[data-walk-reset]').forEach(b=>b.onclick=()=>{const k=b.dataset.walkReset;wpos[k]=0;paintWalk(k)});
+go(0);
+</script>
+
+<a href="index.html" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 14px system-ui,sans-serif;background:#0f2a7a;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">← Menu</a>
