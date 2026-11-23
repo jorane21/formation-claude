@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les outils vidéo de l’atelier</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f3ec;color:#202824;font:16px/1.5 "DM Sans",system-ui,sans-serif}header,main{max-width:1180px;margin:auto;padding:22px clamp(20px,5vw,72px)}header{display:flex;align-items:center;gap:10px;border-bottom:1px solid #c4c7bb;font-weight:700}header i{background:#184737;color:white;padding:2px 9px;border-radius:5px;font-style:normal}h1,h2,h3,p{margin:0}h1{font:normal clamp(48px,7vw,88px)/1.05 Georgia,serif;letter-spacing:-.055em;margin:28px 0 12px}main>p{color:#505e55}.controls{margin:30px 0 36px;padding:18px;background:#e4eade;border-radius:12px}label{display:block;font-weight:650;font-size:14px;margin:6px 0}input,select,textarea,button{font:inherit;border:1px solid #a3afa4;border-radius:6px;padding:10px 12px}input,textarea,select{width:100%;background:white}button{cursor:pointer;background:#204939;color:white;font-weight:650}button:disabled{opacity:.55}.row{display:flex;gap:8px}.row button{white-space:nowrap}section{margin-bottom:32px}h2{font:normal 32px Georgia,serif;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(265px,100%),1fr));gap:16px}.card{background:#fffdfa;border:1px solid #d4d6ca;border-radius:10px;overflow:hidden;max-width:100%}.card img{width:100%;height:142px;object-fit:cover;display:block}.body{padding:16px 18px}.body p{margin:6px 0 14px;color:#536058}.body a{color:#20503c;font-weight:650;text-underline-offset:4px}.tag{font:12px monospace;color:#536058}h3{font-size:20px;line-height:1.25;margin-top:5px}#status:not(:empty){margin-top:12px}#draft{border-top:1px solid #aab6ab;margin-top:15px;padding-top:10px}#draft button{margin-top:12px}#cancel{background:white;color:#204939}.preview{max-width:160px;max-height:85px;margin:8px 0;display:block}h2 small{font:14px monospace;color:#5d695d}footer{font-size:13px;color:#566257;margin:24px 0}@media(max-width:550px){.row{flex-direction:column}h1{margin-top:12px}}
+</style>
+<header><i aria-hidden="true">▶</i> Atelier vidéo</header>
+<main><h1>Les outils vidéo de l’atelier</h1><p>Le répertoire des skills et connecteurs pour monter et animer avec Claude.</p>
+<div class="controls"><form id="lookup"><label for="url">Ajouter un outil par lien</label><div class="row"><input id="url" type="url" placeholder="https://github.com/auteur/dépôt ou site de l’outil" required><button id="analyze">Lire le lien ↗</button></div></form>
+<div id="status" role="status"></div><form id="draft" hidden><label for="name">Titre</label><input id="name" required maxlength="160"><label for="desc">Description</label><textarea id="desc" rows="2" required maxlength="1500"></textarea><label for="category">Catégorie</label><select id="category"><option>Montage vidéo</option><option>Motion design</option></select><label for="picture">URL de l’illustration (facultatif)</label><input id="picture" type="url"><img id="preview" class="preview" alt="Aperçu de la fiche"><button>Ajouter la fiche</button> <button type="button" id="cancel">Annuler</button></form></div>
+<div id="catalog"></div><footer>Les fiches que vous ajoutez sont conservées dans ce navigateur.</footer></main>
+<script>
+const $=id=>document.getElementById(id);
+const groups=['Montage vidéo','Motion design'];
+const seeds=[
+['MakeMyClip Editor','MakeMyClip/editor','Nettoyer les prises, monter par la transcription et reprendre les raccords dans une timeline.','Skill + MCP'],
+['Agentic Video Editing Collab','roysahar11/agentic-video-editing-collab','Organiser les rushes et préparer une séquence XML à reprendre dans Premiere Pro.','Skills'],
+['FFmpeg Skill','kajisho5/ffmpeg-skill','Recadrer, ajuster le son et décliner un montage pour plusieurs formats de diffusion.','Skill + MCP'],
+['Remotion Agent Skills','remotion-dev/skills','Animer textes, formes et schémas pour créer des habillages pédagogiques réutilisables.','Skills officiels'],
+['Brag','latent-spaces/brag','Transformer le projet que l’on vient de créer en courte vidéo de lancement, en une seule commande.','Skill',1],
+['Motion Skills','hideewsj-maker/motion-skills','Créer de courtes vidéos animées et musicales (teasers, explications, données), rendues en MP4 en local, sans installer Remotion.','Skill',1]
+].map(([title,repo,description,kind,img],i)=>({title,url:'https://github.com/'+repo,description,kind,category:groups[Number(i>=3)],art:Math.min(i,3),image:img?'https://opengraph.githubassets.com/1/'+repo:''}));
+function illustration(i){
+ const c=document.createElement('canvas');c.width=760;c.height=240;const g=c.getContext('2d');
+ g.fillStyle=['#164b3c','#323b59','#633c2d','#593771'][i];g.fillRect(0,0,760,240);
+ const ink=['#bcf59c','#b5caff','#ffc69d','#ebc1ff'][i];
+ g.strokeStyle='#ffffff26';for(let x=0;x<760;x+=24){g.beginPath();g.moveTo(x,0);g.lineTo(x,240);g.stroke()}
+ g.fillStyle=ink;g.strokeStyle=ink;g.lineWidth=4;
+ if(i===0||i===1){for(let r=0;r<3;r++)for(let j=0;j<4;j++){const x=48+j*173+r*21;g.globalAlpha=.5+r*.19;g.fillRect(x,48+r*52,126-j*7,30)}g.globalAlpha=1;g.fillStyle='white';g.fillRect(i===0?295:452,30,3,177)}
+ else if(i===2){for(let j=0;j<95;j++){const h=10+Math.abs(Math.sin(j*.24)*Math.cos(j*.095))*130;g.fillRect(6+j*8,120-h/2,5,h)}}
+ else{for(let j=0;j<9;j++){g.save();g.translate(260+j*30,120);g.rotate(j*.12);g.globalAlpha=.25+.08*j;g.strokeRect(-62,-62,124,124);g.restore()}}
+ return c.toDataURL()
+}
+const artwork=[0,1,2,3].map(illustration);
+function safeUrl(value){try{const u=new URL(value);if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)return u.href}catch{}return ''}
+function read(){const value=JSON.parse(localStorage.getItem('atelier-tools-v1')||'[]');return Array.isArray(value)?value.filter(v=>v&&safeUrl(v.url)&&groups.includes(v.category)&&!seeds.some(s=>key(s.url)===key(v.url))):[]}
+let custom=[];try{custom=read()}catch{$('status').textContent='La sauvegarde locale est indisponible.'}
+function node(tag,txt,cls){const el=document.createElement(tag);el.textContent=txt;if(cls)el.className=cls;return el}
+function setImage(el,url,i){el.onerror=()=>{el.onerror=null;el.src=artwork[i]};el.src=safeUrl(url)||artwork[i]}
+function render(){const root=$('catalog');root.replaceChildren();for(const category of groups){
+ const items=[...seeds,...custom].filter(v=>v.category===category);
+ const section=node('section',''),heading=node('h2',category+' '),grid=node('div','','grid');heading.append(node('small',String(items.length).padStart(2,'0')));section.append(heading,grid);
+ for(const v of items){const card=node('article','','card'),img=node('img',''),body=node('div','','body'),link=node('a','Ouvrir '+(new URL(v.url).hostname==='github.com'?'le dépôt':'le site')+' ↗');
+ img.alt='';setImage(img,v.image,v.art??(category===groups[1]?3:0));link.href=v.url;link.target='_blank';link.rel='noopener noreferrer';body.append(node('span',v.kind||new URL(v.url).hostname,'tag'),node('h3',v.title),node('p',v.description),link);card.append(img,body);grid.append(card)}root.append(section)}}
+render();
+let pending='';
+function closeDraft(){pending='';$('draft').hidden=true}
+$('url').oninput=closeDraft;
+function updatePreview(){setImage($('preview'),$('picture').value,$('category').value===groups[1]?3:0)}
+$('picture').oninput=updatePreview;$('category').onchange=updatePreview;
+$('cancel').onclick=()=>{closeDraft();$('status').textContent=''};
+async function metadata(u){const parts=u.pathname.split('/').filter(Boolean);
+ if(u.hostname==='github.com'&&parts.length>=2){const repo=parts.slice(0,2).map(encodeURIComponent).join('/');const r=await fetch('https://api.github.com/repos/'+repo,{signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error();const d=await r.json();return {title:d.name,description:d.description,image:'https://opengraph.githubassets.com/1/'+repo,url:d.html_url}}
+ const r=await fetch('https://api.microlink.io/?url='+encodeURIComponent(u.href),{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();const data=await r.json();if(data.status!=='success')throw Error();return {title:data.data.title,description:data.data.description,image:data.data.image?.url||data.data.logo?.url}}
+function key(url){return new URL(url).origin+new URL(url).pathname.replace(/\/$/,'')}
+$('lookup').onsubmit=async e=>{e.preventDefault();closeDraft();const url=safeUrl($('url').value);if(!url){$('status').textContent='Saisissez un lien HTTP ou HTTPS.';return}
+ $('analyze').disabled=true;$('url').readOnly=true;$('status').textContent='Lecture des informations…';let data={};let message='Vérifiez les informations et choisissez la catégorie.';
+ try{data=await metadata(new URL(url))}catch{message='Lecture automatique indisponible. Vous pouvez compléter la fiche manuellement.'}
+ finally{$('analyze').disabled=false;$('url').readOnly=false}
+ pending=safeUrl(data.url)||url;if([...seeds,...custom].some(v=>key(v.url)===key(pending))){closeDraft();$('status').textContent='Cet outil figure déjà dans le répertoire.';return}
+ $('name').value=data.title||new URL(url).hostname;$('desc').value=data.description||'';$('picture').value=safeUrl(data.image);$('category').selectedIndex=0;updatePreview();$('draft').hidden=false;$('status').textContent=message;$('name').focus()};
+$('draft').onsubmit=e=>{e.preventDefault();if(!pending)return;const title=$('name').value.trim(),description=$('desc').value.trim();if(!title||!description){$('status').textContent='Renseignez le titre et la description.';return}
+ try{const list=read();if([...seeds,...list].some(v=>key(v.url)===key(pending)))throw Error('duplicate');list.push({url:pending,title,description,image:safeUrl($('picture').value),category:$('category').value});localStorage.setItem('atelier-tools-v1',JSON.stringify(list));custom=list}catch(err){$('status').textContent=err.message==='duplicate'?'Cette fiche existe déjà.':'Sauvegarde impossible dans ce navigateur.';return}
+ render();closeDraft();$('lookup').reset();$('status').textContent='Fiche ajoutée au répertoire.'};
+</script></html>
