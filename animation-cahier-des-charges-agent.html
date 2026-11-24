@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le cahier des charges d'un agent</title>
+<style>
+/* Charte : Akyos Design System. Pangram non fourni : repli system-ui. Layout : une colonne de 4 étapes numérotées, chaque étape = une manipulation. Charte Akyos (marine + lime, Pangram). */
+:root{
+  --bg:#fafafd; --surface:#ffffff; --soft:#f4f5f8; --ink:#14172b; --muted:#5f6380; --line:#e3e5ec;
+  --navy:#001662; --sky:#0971ce; --lime:#ddff00; --lime-ink:#14172b; --logo:#2b3260;
+  --ok:#17804f; --ok-bg:#e3f4ec; --ko:#c22f44; --ko-bg:#fbe8ea; --warn:#9a5c08; --warn-bg:#fdf1de;
+  --r1:#0971ce; --r1-bg:#e6f0fb; --r2:#4a3d85; --r2-bg:#ece9f6; --r3:#17804f; --r3-bg:#e3f4ec;
+  --r4:#9a5c08; --r4-bg:#fdf1de; --r5:#c22f44; --r5-bg:#fbe8ea;
+  --stage:#001662; --stage-2:#0a1f8a; --stage-fg:#eef2fb; --stage-muted:#a9b4d6; --stage-line:#3a4f9c;
+  --display:"Pangram","Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Pangram",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --shadow:0 8px 24px rgba(20,23,43,.08);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1030; --surface:#131a40; --soft:#1a2150; --ink:#eef0f8; --muted:#a9adc4; --line:#2a3163;
+  --navy:#c9d5ff; --sky:#6db3ff; --logo:#e6e9f7;
+  --ok:#5fd69a; --ok-bg:#123327; --ko:#ff8a95; --ko-bg:#3a1820; --warn:#f0b85a; --warn-bg:#3a2a10;
+  --r1:#6db3ff; --r1-bg:#152a52; --r2:#b9a8f0; --r2-bg:#2a2350; --r3:#5fd69a; --r3-bg:#123327;
+  --r4:#f0b85a; --r4-bg:#3a2a10; --r5:#ff8a95; --r5-bg:#3a1820;
+  --stage:#060a24; --stage-2:#111a52; --stage-line:#33407a; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1030; --surface:#131a40; --soft:#1a2150; --ink:#eef0f8; --muted:#a9adc4; --line:#2a3163;
+  --navy:#c9d5ff; --sky:#6db3ff; --logo:#e6e9f7;
+  --ok:#5fd69a; --ok-bg:#123327; --ko:#ff8a95; --ko-bg:#3a1820; --warn:#f0b85a; --warn-bg:#3a2a10;
+  --r1:#6db3ff; --r1-bg:#152a52; --r2:#b9a8f0; --r2-bg:#2a2350; --r3:#5fd69a; --r3-bg:#123327;
+  --r4:#f0b85a; --r4-bg:#3a2a10; --r5:#ff8a95; --r5-bg:#3a1820;
+  --stage:#060a24; --stage-2:#111a52; --stage-line:#33407a; --shadow:none; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 56px;display:grid;gap:28px}
+.wrap>*{min-width:0}
+
+header{display:grid;gap:10px}
+.brand{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.875rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.brand svg{height:22px;width:auto}
+.brand svg path,.brand svg polygon,.brand svg rect,.brand svg circle{fill:var(--logo)} .brand svg line{stroke:var(--logo)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,5vw,3rem);line-height:1.08;margin:0;color:var(--navy);text-wrap:balance;letter-spacing:-.01em}
+h1 mark{background:var(--lime);color:var(--lime-ink);padding:0 .15em;border-radius:6px}
+.lede{margin:0;color:var(--muted);max-width:66ch;font-size:1.0625rem}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.toc a{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none;font-size:.875rem;font-weight:700}
+.toc a span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--bg);font-size:.75rem}
+
+section.block{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);display:grid;gap:18px}
+.sec-head{display:flex;gap:14px;align-items:flex-start}
+.num{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--lime);color:var(--lime-ink);font-family:var(--display);font-weight:800;font-size:1.25rem}
+.sec-head h2{font-family:var(--display);font-weight:800;font-size:1.5rem;line-height:1.2;margin:0;color:var(--navy);text-wrap:balance}
+.sec-head p{margin:4px 0 0;color:var(--muted);max-width:68ch}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;background:var(--soft);border:1px solid var(--line);width:max-content;max-width:100%}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;font-weight:700;font-size:.9375rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(20,23,43,.12)}
+
+/* Couleurs des règles */
+[data-r="1"]{--c:var(--r1);--cb:var(--r1-bg)} [data-r="2"]{--c:var(--r2);--cb:var(--r2-bg)}
+[data-r="3"]{--c:var(--r3);--cb:var(--r3-bg)} [data-r="4"]{--c:var(--r4);--cb:var(--r4-bg)}
+[data-r="5"]{--c:var(--r5);--cb:var(--r5-bg)}
+.rdot{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:var(--c);color:var(--surface);font-weight:800;font-size:.8125rem}
+
+/* ÉTAPE 1 */
+.r-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+.brief{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--soft);display:grid;gap:8px}
+.brief-label{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bline{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;border:1px solid transparent;border-left:4px solid var(--c);background:var(--surface);border-radius:10px;padding:10px 12px}
+.bline:hover{border-color:var(--line);border-left-color:var(--c)}
+.bline[aria-pressed="true"]{background:var(--cb);border-color:var(--c)}
+.bline small{display:block;font-weight:700;color:var(--c);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase}
+.bline span.t{display:block;font-size:.9375rem}
+.vague{background:var(--surface);border:1px dashed var(--muted);border-radius:10px;padding:14px;font-size:1.0625rem;font-weight:700}
+.qline{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:6px 8px;color:var(--muted)}
+.qline:hover{background:var(--surface)}
+.qline[aria-pressed="true"]{background:var(--cb);color:var(--ink);border-color:var(--c)}
+.qline .qm{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;border:2px dashed var(--c);color:var(--c);font-weight:800}
+.qline em{font-style:normal;margin-left:auto;font-size:.8125rem;color:var(--ko);font-weight:700;white-space:nowrap}
+
+.detail{border-radius:16px;padding:20px;background:var(--cb);border:1px solid var(--c);display:grid;gap:14px}
+.detail h3{margin:0;display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:1.375rem;color:var(--ink)}
+.detail .q{margin:0;font-weight:700;color:var(--c);font-size:1.0625rem}
+.dl{display:grid;gap:12px;margin:0}
+.dl dt{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dl dd{margin:2px 0 0}
+.dl dd.ex{background:var(--surface);border-radius:10px;padding:10px 12px;font-style:italic}
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:10px;padding:10px 12px;font-weight:700}
+.tip b{flex:none;background:var(--lime);color:var(--lime-ink);border-radius:6px;padding:0 8px;font-size:.8125rem;line-height:1.7}
+
+/* ÉTAPE 2 : simulation */
+.sim-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:700;font-size:.9375rem}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:var(--bg)}
+.btn:disabled{opacity:.4;cursor:default}
+.count{font-size:.875rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:7ch;text-align:center}
+.sim{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+.stage{background:radial-gradient(130% 140% at 100% 0%,var(--stage-2) 0%,var(--stage) 62%);color:var(--stage-fg);border-radius:18px;padding:16px;display:grid;gap:14px}
+.stage svg{width:100%;height:auto;display:block}
+.node rect{fill:rgba(255,255,255,.06);stroke:var(--stage-line);stroke-width:1.5;transition:fill .25s}
+.node text{fill:var(--stage-fg);font-family:var(--display);font-weight:700;font-size:15px}
+.node text.sub{fill:var(--stage-muted);font-family:var(--body);font-weight:400;font-size:11.5px}
+.node.on rect{fill:var(--lime);stroke:var(--lime)}
+.node.on text,.node.on text.sub{fill:#14172b}
+.edge{stroke:var(--stage-muted);stroke-width:1.6;fill:none}
+.elabel{fill:var(--stage-muted);font-size:12px;font-family:var(--body);font-weight:700}
+.badge circle{stroke:var(--stage);stroke-width:2.5}
+.badge text{fill:#fff;font-size:11px;font-weight:800;font-family:var(--body);text-anchor:middle;dominant-baseline:central}
+.badge{transition:opacity .25s,transform .25s;transform-box:fill-box;transform-origin:center}
+.badge.hot{transform:scale(1.35)}
+.modeA .badge{opacity:.18}
+.narr{background:rgba(255,255,255,.07);border:1px solid var(--stage-line);border-radius:14px;padding:14px;display:grid;gap:8px;min-height:150px}
+.narr h3{margin:0;font-family:var(--display);font-weight:800;font-size:1.125rem}
+.narr p{margin:0;color:var(--stage-fg)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:.8125rem;font-weight:700;background:rgba(255,255,255,.1);color:var(--stage-fg)}
+.tag.rule{background:var(--c);color:#fff}
+.tag.brick{background:var(--lime);color:#14172b}
+.tag.warn{background:#ff8a95;color:#2a0b12}
+.tag.lock{background:#fff;color:#001662}
+.check{font-family:var(--mono);font-size:.8125rem;border-radius:8px;padding:8px 10px}
+.check.fail{background:#3a1820;color:#ffb3bb}
+.check.ok{background:#123327;color:#9be8c0}
+.check.feel{background:rgba(255,255,255,.1);color:var(--stage-muted);font-family:var(--body);font-style:italic;font-size:.9375rem}
+.bilan{border-radius:12px;padding:12px 14px;font-weight:700}
+.bilan.bad{background:#ff8a95;color:#2a0b12}
+.bilan.good{background:var(--lime);color:#14172b}
+
+.outs{display:grid;gap:12px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.panel>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--soft);border-bottom:1px solid var(--line);font-size:.8125rem;font-weight:700}
+.panel>header code{font-family:var(--mono);font-weight:600}
+.panel>header .rr{display:flex;gap:4px}
+.panel>header .rr .rdot{width:18px;height:18px;font-size:.6875rem}
+.pbody{padding:10px 12px;font-size:.875rem}
+.empty{color:var(--muted);font-style:italic}
+.files{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-family:var(--mono);font-size:.8125rem}
+.files li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:3px 6px;border-radius:6px}
+.files li .st{font-family:var(--body);font-size:.75rem;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.st.vu{background:var(--soft);color:var(--muted)}
+.st.lu{background:var(--ok-bg);color:var(--ok)}
+.st.luw{background:var(--ko-bg);color:var(--ko)}
+.st.ign{background:var(--warn-bg);color:var(--warn)}
+.st.blq{background:var(--navy);color:var(--bg)}
+.files li.out{opacity:.55}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8125rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.flag{background:var(--warn-bg);outline:2px solid var(--warn);outline-offset:-2px}
+tr.new td{animation:flash 1s ease-out}
+@keyframes flash{from{background:var(--lime)}}
+.prose p{margin:0 0 6px}
+.wm{display:inline-block;margin-left:6px;font-size:.6875rem;font-weight:700;color:var(--ko);background:var(--ko-bg);border-radius:6px;padding:0 6px;vertical-align:1px}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.list li{display:flex;gap:8px;align-items:baseline}
+.list li b{flex:none;font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:0 6px}
+.k-trait{background:var(--ok-bg);color:var(--ok)} .k-ign{background:var(--warn-bg);color:var(--warn)} .k-ref{background:var(--soft);color:var(--ink)}
+.memline{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+.memline b{color:var(--navy)}
+.hooktrace{margin-top:8px;font-size:.8125rem;color:var(--muted)}
+.hooktrace.okc{color:var(--ok);font-weight:700}
+.observer{font-size:.8125rem;color:var(--muted)}
+
+/* ÉTAPE 3 : briques */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 6px;font-weight:700;font-size:.9375rem}
+.chip.all{padding-left:12px}
+.chip[aria-pressed="true"]{background:var(--cb,var(--navy));border-color:var(--c,var(--navy));color:var(--ink)}
+.chip.all[aria-pressed="true"]{color:var(--bg)}
+.map{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+.bricks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.brick{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface);display:grid;gap:6px;align-content:start;transition:opacity .2s,border-color .2s}
+.brick .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brick h4{margin:0;font-family:var(--display);font-weight:800;font-size:1rem}
+.kind{font-size:.6875rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:1px 6px;white-space:nowrap}
+.kind.texte{background:var(--soft);color:var(--muted)}
+.kind.garantie{background:var(--navy);color:var(--bg)}
+.kind.recherche,.kind.quand{background:var(--warn-bg);color:var(--warn)}
+.brick .role{margin:0;font-size:.875rem;color:var(--muted)}
+.brick .what{margin:0;font-size:.875rem;font-weight:700;background:var(--cb);border-left:3px solid var(--c);border-radius:6px;padding:6px 8px}
+.brick .dots{display:flex;gap:4px}
+.brick .dots .rdot{width:18px;height:18px;font-size:.6875rem}
+.brick.dim{opacity:.38}
+.brick.hit{border-color:var(--c)}
+.tree{border-radius:14px;background:var(--stage);color:var(--stage-fg);padding:14px 10px;font-family:var(--mono);font-size:.78rem;line-height:1.5;overflow-x:auto}
+.tree .tl{display:flex;justify-content:space-between;gap:10px;padding:1px 6px;border-radius:6px;white-space:pre}
+.tree .tl.hit{background:rgba(221,255,0,.16)}
+.tree .tl.hit .nm{color:var(--lime)}
+.tree .tl.dim{opacity:.45}
+.tree .rr{display:flex;gap:3px}
+.tree .rr i{display:block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-top:5px}
+.prompt-line{font-family:var(--body);white-space:normal;color:var(--stage-muted);border-top:1px dashed var(--stage-line);margin-top:8px;padding-top:8px}
+.note{font-size:.875rem;color:var(--muted);background:var(--soft);border-radius:10px;padding:10px 12px}
+
+/* ÉTAPE 4 : quiz */
+.quiz{display:grid;gap:14px;max-width:760px}
+.qhead{display:flex;justify-content:space-between;gap:10px;font-size:.875rem;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--navy);transition:width .3s}
+.qcard{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--soft);display:grid;gap:14px}
+.qtext{margin:0;font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1.3;text-wrap:balance}
+.qtext small{display:block;font-family:var(--body);font-weight:400;font-size:.875rem;color:var(--muted);margin-bottom:4px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opt{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;text-align:left;font-weight:700;display:grid;gap:2px}
+.opt span{font-weight:400;font-size:.8125rem;color:var(--muted)}
+.opt:hover:not(:disabled){border-color:var(--navy)}
+.opt:disabled{cursor:default}
+.opt.good{background:var(--ok-bg);border-color:var(--ok)}
+.opt.bad{background:var(--ko-bg);border-color:var(--ko)}
+.fb{border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.fb.good{background:var(--ok-bg);color:var(--ink);border:1px solid var(--ok)}
+.fb.bad{background:var(--ko-bg);color:var(--ink);border:1px solid var(--ko)}
+.fb strong{color:var(--ok)} .fb.bad strong{color:var(--ko)}
+.final{text-align:left;display:grid;gap:10px}
+.score{font-family:var(--display);font-weight:800;font-size:2.5rem;color:var(--navy);line-height:1}
+
+/* ÉTAPE 5 : à retenir */
+.keep{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.keep li{border-radius:12px;padding:12px;background:var(--soft);display:grid;gap:2px}
+.keep li b{font-family:var(--display);font-weight:800;color:var(--navy)}
+.punch{border-radius:16px;padding:18px;background:var(--navy);color:var(--bg);display:grid;gap:6px}
+.punch p{margin:0;font-size:1.0625rem}
+.punch strong{font-family:var(--display);font-size:1.25rem;font-weight:800}
+.punch mark{background:var(--lime);color:var(--lime-ink);border-radius:4px;padding:0 4px}
+footer{color:var(--muted);font-size:.8125rem;display:grid;gap:4px}
+
+@media (max-width:860px){
+  .r-grid,.sim,.map{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  section.block{padding:16px;border-radius:16px}
+  .opts{grid-template-columns:1fr}
+  .sec-head h2{font-size:1.25rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand"><svg aria-label="Akyos" role="img" id="Calque_2" data-name="Calque 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112.95 28.21">
+  <defs>
+    
+  </defs>
+  <g id="Calque_1-2" data-name="Calque 1">
+    <g>
+      <path class="cls-1" d="M46.18,24.15v3.04c0,.32-.26.59-.59.59,0,0-.01,0-.02,0-3.34-.13-6.51-1.52-8.88-3.88-1.73,1.24-3.64,2.22-5.66,2.89v.4c.02.33-.22.62-.55.65h-3.28s-.1.01-.14,0c-.06-.03-.11-.07-.14-.11h0c-.07-.09-.11-.2-.11-.32V.65c-.03-.33.22-.62.55-.65h3.11c.33.03.58.32.55.65v21.62c1.13-.48,2.19-1.08,3.18-1.79,1.3-.92,2.46-2.03,3.44-3.28,2.2-2.84,3.45-6.29,3.58-9.88,0-.29.24-.52.53-.52h3.15c.3,0,.55.24.55.55,0,0,0,0,0,0-.06,5.09-2.04,9.97-5.53,13.68,1.52,1.5,3.54,2.41,5.67,2.54.32,0,.58.27.58.59h0Z"></path>
+      <path class="cls-1" d="M69.39,7.33v4.56c-.02,4.95-3.51,9.2-8.36,10.18-2.38,3.43-6.23,5.54-10.4,5.71-.3,0-.55-.24-.55-.54h0v-3.17c0-.29.23-.52.52-.53,1.79-.1,3.51-.75,4.93-1.85-4.15-1.47-6.93-5.39-6.95-9.79v-4.56c0-.29.24-.53.53-.53h3.17c.29,0,.53.24.53.53v4.56c.04,3.12,2.4,5.73,5.5,6.08.23.02.46.04.69.04,3.42,0,6.19-2.78,6.19-6.19v-4.48c0-.29.24-.53.53-.53h3.18c.28.02.5.25.5.53Z"></path>
+      <line class="cls-2" x1="52.77" y1="11.89" x2="52.76" y2="11.89"></line>
+      <path class="cls-1" d="M103.94,28.21c-1.65,0-3.29-.22-4.88-.68-1.21-.33-2.37-.84-3.43-1.52-.2-.14-.27-.41-.16-.63l1.25-2.77c.12-.26.42-.38.68-.26.03.01.05.03.08.04.86.53,1.77.95,2.73,1.26,1.22.41,2.51.62,3.8.62.79.03,1.59-.07,2.35-.29.51-.13.97-.41,1.32-.8.28-.33.43-.75.43-1.19.02-.53-.24-1.04-.67-1.35-.53-.37-1.13-.65-1.76-.81-.76-.21-1.52-.42-2.42-.61s-1.76-.43-2.64-.71c-.84-.27-1.65-.63-2.41-1.09-1.61-.94-2.56-2.7-2.45-4.56-.01-1.18.33-2.34.98-3.32.73-1.07,1.75-1.9,2.93-2.41,1.58-.65,3.28-.95,4.99-.9,1.33,0,2.65.16,3.94.47,1.06.25,2.09.65,3.04,1.19.22.13.31.4.21.63l-1.14,2.8c-.11.26-.41.38-.67.27-.02,0-.03-.01-.05-.02-.79-.41-1.62-.74-2.47-.98-.95-.27-1.93-.41-2.91-.41-.79-.03-1.58.09-2.33.33-.51.16-.96.45-1.31.86-.26.36-.4.79-.4,1.23-.01.53.24,1.02.67,1.32.53.37,1.13.65,1.76.81.76.21,1.52.4,2.42.61s1.76.43,2.64.7c.84.25,1.65.6,2.41,1.06.72.44,1.33,1.04,1.77,1.76.48.84.72,1.79.68,2.76,0,1.17-.34,2.31-1,3.28-.75,1.06-1.79,1.89-2.99,2.39-1.59.66-3.3.98-5.02.93Z"></path>
+      <path class="cls-1" d="M21.24,6.79h-3.14c-.29-.02-.53.2-.55.49v1.66c-.31-.48-.71-.89-1.19-1.2-1.46-.81-3.08-1.26-4.74-1.32h-.45C5.16,6.26.16,11,0,17.01c-.16,6.01,4.58,11.01,10.59,11.17.19,0,.38,0,.58,0h.45c1.61-.07,3.18-.49,4.61-1.23l.07-.05c.5-.33.93-.76,1.25-1.26v1.81c0,.09.04.18.11.24.05.04.1.08.16.1.05,0,.1,0,.14,0h3.28c.28.02.53-.2.55-.48,0,0,0,0,0,0V7.28c-.02-.28-.26-.5-.55-.49h0ZM17.55,19.28c-1.08,3.57-4.85,5.59-8.41,4.51-3.57-1.08-5.59-4.85-4.51-8.41,1.08-3.57,4.85-5.59,8.41-4.51,2.85.86,4.8,3.49,4.8,6.46,0,.66-.1,1.32-.29,1.95Z"></path>
+      <path class="cls-1" d="M82.36,6.29c-6.04,0-10.95,4.89-10.95,10.94,0,6.04,4.89,10.95,10.94,10.95,6.04,0,10.95-4.89,10.95-10.94v-.02c0-6.04-4.9-10.93-10.94-10.94ZM82.36,23.93c-3.71,0-6.71-3-6.71-6.71,0-3.71,3-6.71,6.71-6.71s6.71,3,6.71,6.71-3,6.71-6.71,6.71h0Z"></path>
+    </g>
+  </g>
+</svg><span>Formation · Agents IA</span></div>
+  <h1>Le cahier des charges d'un agent, <mark>du texte au harnais</mark></h1>
+  <p class="lede">Un agent travaille seul, en plusieurs étapes, sans pouvoir te poser de questions. Comme un stagiaire qu'on laisse tout un week-end avec un dossier, il a besoin de savoir où chercher, quoi rendre, quand s'arrêter, quoi faire s'il bloque et comment te montrer ce qu'il a fait. Ici, l'exemple suivi est une veille concurrentielle sur les PDF du 3<sup>e</sup> trimestre.</p>
+  <nav class="toc" aria-label="Étapes">
+    <a href="#regles"><span>1</span>Les 5 règles</a>
+    <a href="#boucle"><span>2</span>La boucle en action</a>
+    <a href="#briques"><span>3</span>Qui fait quoi</a>
+    <a href="#jeu"><span>4</span>Le jeu</a>
+    <a href="#retenir"><span>5</span>À retenir</a>
+  </nav>
+</header>
+
+<!-- ÉTAPE 1 -->
+<section class="block" id="regles" aria-labelledby="h-regles">
+  <div class="sec-head"><div class="num">1</div><div>
+    <h2 id="h-regles">Les 5 règles du cahier des charges</h2>
+    <p>Compare un brief flou et un brief précis. Clique sur une ligne pour voir à quoi elle sert et ce qui se passe sans elle.</p>
+  </div></div>
+  <div class="seg" role="group" aria-label="Type de brief">
+    <button type="button" id="bf-vague" aria-pressed="false">Brief flou</button>
+    <button type="button" id="bf-precis" aria-pressed="true">Brief précis</button>
+  </div>
+  <div class="r-grid">
+    <div class="brief" id="brief"></div>
+    <div class="detail" id="ruleDetail" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ÉTAPE 2 -->
+<section class="block" id="boucle" aria-labelledby="h-boucle">
+  <div class="sec-head"><div class="num">2</div><div>
+    <h2 id="h-boucle">La boucle en action : sans et avec cahier des charges</h2>
+    <p>Le harnais fait tourner Claude en boucle : il réfléchit, utilise un outil, regarde le résultat, puis se demande « Terminé ? ». Avance pas à pas et regarde ce que tu reçois à la fin.</p>
+  </div></div>
+  <div class="sim-bar">
+    <div class="seg" role="group" aria-label="Scénario">
+      <button type="button" id="mA" aria-pressed="false">Sans cahier des charges</button>
+      <button type="button" id="mB" aria-pressed="true">Avec cahier des charges + harnais</button>
+    </div>
+    <div class="ctrls">
+      <button type="button" class="btn" id="prev">← Précédent</button>
+      <span class="count" id="count" aria-live="polite"></span>
+      <button type="button" class="btn primary" id="next">Étape suivante →</button>
+      <button type="button" class="btn" id="reset">Rejouer</button>
+    </div>
+  </div>
+  <div class="sim" id="sim">
+    <div class="stage">
+      <svg viewBox="0 0 640 292" role="img" aria-label="Boucle du harnais : contexte, Claude, terminé, outil, résultat, livraison">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a9b4d6"/></marker></defs>
+        <line class="edge" x1="142" y1="70" x2="176" y2="70" marker-end="url(#ar)"/>
+        <line class="edge" x1="312" y1="70" x2="346" y2="70" marker-end="url(#ar)"/>
+        <line class="edge" x1="482" y1="70" x2="506" y2="70" marker-end="url(#ar)"/>
+        <text class="elabel" x="483" y="58">oui</text>
+        <line class="edge" x1="415" y1="100" x2="415" y2="196" marker-end="url(#ar)"/>
+        <text class="elabel" x="424" y="152">non</text>
+        <line class="edge" x1="348" y1="230" x2="314" y2="230" marker-end="url(#ar)"/>
+        <line class="edge" x1="245" y1="200" x2="245" y2="104" marker-end="url(#ar)"/>
+        <g class="node" id="n-ctx"><rect x="10" y="40" width="130" height="60" rx="12"/><text x="75" y="66" text-anchor="middle">Contexte</text><text class="sub" x="75" y="84" text-anchor="middle">ce qu'il lit au départ</text></g>
+        <g class="node" id="n-llm"><rect x="180" y="40" width="130" height="60" rx="12"/><text x="245" y="66" text-anchor="middle">Claude</text><text class="sub" x="245" y="84" text-anchor="middle">réfléchit, décide</text></g>
+        <g class="node" id="n-done"><rect x="350" y="40" width="130" height="60" rx="12"/><text x="415" y="66" text-anchor="middle">Terminé ?</text><text class="sub" x="415" y="84" text-anchor="middle">la question clé</text></g>
+        <g class="node" id="n-out"><rect x="510" y="40" width="120" height="60" rx="12"/><text x="570" y="66" text-anchor="middle">Livraison</text><text class="sub" x="570" y="84" text-anchor="middle">ce que tu reçois</text></g>
+        <g class="node" id="n-tool"><rect x="350" y="200" width="130" height="60" rx="12"/><text x="415" y="226" text-anchor="middle">Outil</text><text class="sub" x="415" y="244" text-anchor="middle">lister, ouvrir, écrire</text></g>
+        <g class="node" id="n-res"><rect x="180" y="200" width="130" height="60" rx="12"/><text x="245" y="226" text-anchor="middle">Résultat</text><text class="sub" x="245" y="244" text-anchor="middle">ce que l'outil renvoie</text></g>
+        <g class="badge" data-b="1"><circle cx="480" cy="202" r="11" fill="#0971ce"/><text x="480" y="202">1</text></g>
+        <g class="badge" data-b="2"><circle cx="628" cy="44" r="11" fill="#7a6bc4"/><text x="628" y="44">2</text></g>
+        <g class="badge" data-b="5"><circle cx="628" cy="96" r="11" fill="#e0566a"/><text x="628" y="96">5</text></g>
+        <g class="badge" data-b="3"><circle cx="478" cy="44" r="11" fill="#1f9d63"/><text x="478" y="44">3</text></g>
+        <g class="badge" data-b="4"><circle cx="182" cy="202" r="11" fill="#d18a1f"/><text x="182" y="202">4</text></g>
+        <text class="elabel" x="10" y="286">Les pastilles 1 à 5 montrent où chaque règle agit dans la boucle.</text>
+      </svg>
+      <div class="narr" id="narr" aria-live="polite"></div>
+    </div>
+    <div class="outs">
+      <div class="panel"><header><code>/Veille</code><span class="rr"><span class="rdot" data-r="1">1</span></span></header><div class="pbody"><ul class="files" id="files"></ul></div></div>
+      <div class="panel"><header><span id="livTitle">Le livrable</span><span class="rr"><span class="rdot" data-r="2">2</span><span class="rdot" data-r="3">3</span></span></header><div class="pbody" id="liv"></div></div>
+      <div class="panel"><header><code>NOTES.md</code><span class="rr"><span class="rdot" data-r="4">4</span></span></header><div class="pbody" id="notes"></div></div>
+      <div class="panel"><header><code>journal.md</code><span class="rr"><span class="rdot" data-r="5">5</span></span></header><div class="pbody" id="journal"></div></div>
+      <p class="observer">Données fictives. Les avertissements en rouge, tu ne les vois ici que parce que tu regardes par-dessus l'épaule de l'agent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ÉTAPE 3 -->
+<section class="block" id="briques" aria-labelledby="h-briques">
+  <div class="sec-head"><div class="num">3</div><div>
+    <h2 id="h-briques">Qui fait quoi : chaque règle se répartit sur plusieurs briques</h2>
+    <p>Choisis une règle : les briques qui la portent s'allument, avec ce qu'elles contiennent. Les briques « consigne lue » sont du texte que l'agent lit. Les briques « garantie » agissent même s'il oublie.</p>
+  </div></div>
+  <div class="chips" id="mapChips" role="group" aria-label="Choisir une règle"></div>
+  <div class="map">
+    <div class="bricks" id="bricks"></div>
+    <div>
+      <div class="tree" id="tree" aria-label="Arborescence du projet de veille"></div>
+    </div>
+  </div>
+  <p class="note" id="ragNote"><b>Et le RAG ?</b> Pas ici, et c'est normal : les PDF du trimestre sont l'entrée, l'agent les lit en entier. On lit ce qui est petit, on fait une recherche dans ce qui est gros (par exemple trois ans d'archives de veille).</p>
+</section>
+
+<!-- ÉTAPE 4 -->
+<section class="block" id="jeu" aria-labelledby="h-jeu">
+  <div class="sec-head"><div class="num">4</div><div>
+    <h2 id="h-jeu">Le jeu : où va cette consigne ?</h2>
+    <p>Pour chaque consigne, choisis la brique qui doit la porter. La question à se poser est toujours la même : est-ce que ça change, est-ce que ça dure, est-ce que ça doit être garanti ?</p>
+  </div></div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<!-- ÉTAPE 5 -->
+<section class="block" id="retenir" aria-labelledby="h-retenir">
+  <div class="sec-head"><div class="num">5</div><div>
+    <h2 id="h-retenir">À retenir</h2>
+  </div></div>
+  <ul class="keep">
+    <li><b>Instruction</b><span>dit quoi faire cette fois-ci.</span></li>
+    <li><b>CLAUDE.md</b><span>pose les règles du lieu, valables tout le temps.</span></li>
+    <li><b>Skill</b><span>donne la méthode d'une tâche qui revient.</span></li>
+    <li><b>Mémoire</b><span>garde ce qu'on a appris et décidé.</span></li>
+    <li><b>RAG</b><span>cherche dans ce qui est trop gros pour être lu en entier.</span></li>
+    <li><b>Permissions, scripts, hooks</b><span>garantissent ce qui ne doit jamais dépendre de la bonne volonté du modèle.</span></li>
+  </ul>
+  <div class="punch">
+    <strong>Le panneau et la serrure</strong>
+    <p>Le cahier des charges écrit, c'est un panneau « Défense d'entrer ». Le harnais, c'est la <mark>serrure</mark>. Plus une tâche revient souvent et plus une erreur coûte cher, plus on fait passer de règles du panneau vers la serrure.</p>
+  </div>
+  <footer>
+    <span>À vérifier avant un support stagiaire : la syntaxe exacte des permissions et des hooks dans la documentation Claude Code. La répartition présentée ici, elle, ne dépend pas de cette syntaxe.</span>
+    <span>Akyos Formation · exemple de veille aux données fictives.</span>
+  </footer>
+</section>
+
+</div>
+<script>
+(function(){
+"use strict";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+/* ===== Données : les 5 règles ===== */
+var RULES=[
+ {n:1,name:"Périmètre",q:"Où je travaille, et où je ne vais pas ?",
+  ex:"Uniquement /Veille/Q3, uniquement les PDF. Ne touche à aucun autre dossier.",
+  means:"Le lieu de travail (un dossier), le type de fichier, et une interdiction claire pour tout le reste.",
+  without:"L'agent ouvre des fichiers hors sujet, mélange les trimestres, et peut lire des documents confidentiels.",
+  tip:"Écris aussi l'interdiction. « Ne touche à rien d'autre » ferme la porte."},
+ {n:2,name:"Livrable",q:"Qu'est-ce que je rends, et sous quelle forme ?",
+  ex:"Un classeur .xlsx, un onglet par concurrent, colonnes : date, source, catégorie, résumé.",
+  means:"Le format exact : le contenant, l'organisation, les colonnes. Pas le sujet.",
+  without:"Il choisit la forme lui-même : souvent un long texte, différent à chaque fois, impossible à comparer d'un trimestre à l'autre.",
+  tip:"Décris le contenant, pas le sujet."},
+ {n:3,name:"Critère de réussite",q:"Comment je sais que j'ai fini ?",
+  ex:"Chaque PDF apparaît dans exactement une ligne.",
+  means:"Un test qui se vérifie par oui ou non, sans avis. Ici, on compte : 4 PDF, 4 lignes.",
+  without:"Il s'arrête « au ressenti ». Les oublis et les doublons passent inaperçus.",
+  tip:"« Exactement une » attrape les oublis et les doublons d'un coup."},
+ {n:4,name:"Conduite en cas de doute",q:"Que faire quand l'information manque ?",
+  ex:"Si la date n'est pas explicite : cellule vide, surlignée, et ligne ajoutée dans NOTES.md. N'extrapole jamais une date.",
+  means:"Une procédure à suivre à la place de la question qu'il ne peut pas te poser : laisser vide, rendre visible, garder une trace.",
+  without:"Il comble le trou avec une date plausible, mais fausse. Tu ne le sauras jamais.",
+  tip:"Un trou visible vaut mieux qu'une erreur invisible."},
+ {n:5,name:"Journal",q:"Comment tu vérifies mon travail ?",
+  ex:"Liste des fichiers traités, des fichiers ignorés et de la raison de chaque exclusion.",
+  means:"Ce qu'il te rend pour contrôler en deux minutes au lieu de tout refaire.",
+  without:"Un fichier écarté disparaît sans bruit. Le tableau a l'air complet sans l'être.",
+  tip:"Ce sont les fichiers ignorés qui en disent le plus."}
+];
+var curRule=1, briefMode="precis";
+
+function renderBrief(){
+  var h="";
+  if(briefMode==="precis"){
+    h+='<div class="brief-label">Brief précis · 5 lignes</div>';
+    RULES.forEach(function(r){
+      h+='<button type="button" class="bline" data-r="'+r.n+'" aria-pressed="'+(r.n===curRule)+'"><span class="rdot">'+r.n+'</span><span><small>'+esc(r.name)+'</small><span class="t">« '+esc(r.ex)+' »</span></span></button>';
+    });
+  }else{
+    h+='<div class="brief-label">Brief flou · 1 phrase</div>';
+    h+='<div class="vague">« Fais-moi une veille concurrentielle sur le trimestre. »</div>';
+    h+='<div class="brief-label">Les questions qu\'il va se poser seul</div>';
+    RULES.forEach(function(r){
+      h+='<button type="button" class="qline" data-r="'+r.n+'" aria-pressed="'+(r.n===curRule)+'"><span class="qm">?</span><span>'+esc(r.q)+'</span><em>pas dit</em></button>';
+    });
+  }
+  $("#brief").innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll("#brief [data-r]"),function(b){
+    b.addEventListener("click",function(){curRule=+b.getAttribute("data-r");renderBrief();renderDetail();});
+  });
+}
+function renderDetail(){
+  var r=RULES[curRule-1], d=$("#ruleDetail");
+  d.setAttribute("data-r",r.n);
+  d.innerHTML='<h3><span class="rdot">'+r.n+'</span>'+esc(r.name)+'</h3>'+
+   '<p class="q">'+esc(r.q)+'</p>'+
+   '<dl class="dl"><div><dt>Ce que ça veut dire</dt><dd>'+esc(r.means)+'</dd></div>'+
+   '<div><dt>Dans l\'exemple</dt><dd class="ex">« '+esc(r.ex)+' »</dd></div>'+
+   '<div><dt>Sans cette règle</dt><dd>'+esc(r.without)+'</dd></div></dl>'+
+   '<div class="tip"><b>Réflexe</b><span>'+esc(r.tip)+'</span></div>';
+}
+$("#bf-vague").addEventListener("click",function(){briefMode="vague";this.setAttribute("aria-pressed","true");$("#bf-precis").setAttribute("aria-pressed","false");renderBrief();});
+$("#bf-precis").addEventListener("click",function(){briefMode="precis";this.setAttribute("aria-pressed","true");$("#bf-vague").setAttribute("aria-pressed","false");renderBrief();});
+
+/* ===== Simulation ===== */
+var FILES=[
+ {id:"q2a",path:"Q2/rapport-A-mai.pdf",q2:true},
+ {id:"a1",path:"Q3/rapport-A-juillet.pdf"},
+ {id:"a2",path:"Q3/tarifs-A-aout.pdf"},
+ {id:"b1",path:"Q3/communique-B.pdf"},
+ {id:"c1",path:"Q3/catalogue-C.pdf"},
+ {id:"doc",path:"Q3/notes-reunion.docx"}
+];
+var ST={vu:["vu","listé"],lu:["lu","traité"],luw:["luw","lu ⚠"],ign:["ign","ignoré"],blq:["blq","refusé 🔒"]};
+var ROWS={
+ a1:{o:"A",d:"04/07/2026",s:"rapport-A-juillet.pdf",c:"Produit",r:"Offre d'entrée de gamme lancée"},
+ a2:{o:"A",d:"21/08/2026",s:"tarifs-A-aout.pdf",c:"Tarifs",r:"Hausse moyenne de 4 %"},
+ b1:{o:"B",d:"",flag:true,s:"communique-B.pdf",c:"Partenariat",r:"Nouveau partenariat régional"},
+ c1:{o:"C",d:"12/09/2026",s:"catalogue-C.pdf",c:"Produit",r:"Catalogue automne, 3 nouveautés"}
+};
+var STEPS={
+ A:[
+  {node:"ctx",title:"Le brief tient en une phrase",text:"L'agent reçoit : « Fais-moi une veille concurrentielle sur le trimestre. » Rien sur le lieu, le format, la fin ni les doutes."},
+  {node:"tool",title:"Il explore tout",text:"Personne ne lui a dit où chercher : il liste tout le dossier /Veille, trimestres précédents compris.",warn:"Pas de périmètre",files:{q2a:"vu",a1:"vu",a2:"vu",b1:"vu",c1:"vu",doc:"vu"}},
+  {node:"res",title:"Il mélange les trimestres",text:"Il lit le rapport de mai, qui date du 2e trimestre, et l'intègre à la veille du 3e.",warn:"Hors périmètre",files:{q2a:"luw"},prose:{t:"Au printemps, A a publié un rapport annuel ambitieux.",w:"vient de Q2"}},
+  {node:"res",title:"Il reprend des notes internes",text:"Les notes de réunion ne viennent pas d'un concurrent, mais rien ne l'interdit : il les cite dans la veille.",warn:"Document interne repris",files:{doc:"luw"},prose:{t:"En interne, l'équipe juge cette offre peu crédible.",w:"notes internes"}},
+  {node:"res",title:"Un rapport utile",text:"Il lit le rapport de juillet de A. Aucun format imposé : il écrit des phrases.",files:{a1:"lu"},prose:{t:"En juillet, A lance une offre d'entrée de gamme."}},
+  {node:"res",title:"Il invente une date",text:"Le communiqué de B n'est pas daté. Il estime « mi-août » et l'écrit comme un fait.",warn:"Date inventée",files:{b1:"luw"},prose:{t:"Mi-août, B annonce un nouveau partenariat régional.",w:"date inventée"}},
+  {node:"done",title:"Il s'arrête au ressenti",text:"« Terminé ? » Sans critère, il juge que ça a l'air complet. Deux PDF n'ont jamais été ouverts.",warn:"2 fichiers oubliés",check:{k:"feel",t:"« Ça me semble complet. »"}},
+  {node:"out",title:"Ce que tu reçois",text:"Un texte bien écrit, qui contient 4 problèmes. De ton côté, aucun n'est visible : pas de note, pas de journal.",bilan:{k:"bad",t:"4 problèmes, 0 visible pour toi."}}
+ ],
+ B:[
+  {node:"ctx",title:"Le contexte est déjà prêt",text:"Le prompt tient en une ligne : « Lance la veille trimestrielle sur Q3. » Tout le reste est chargé d'avance.",bricks:["Instruction","CLAUDE.md","Skill","Mémoire"]},
+  {node:"tool",rule:1,title:"Il liste Q3, et seulement Q3",text:"Il ouvre la liste de /Veille/Q3 : 4 PDF et un fichier Word.",bricks:["Instruction","CLAUDE.md"],files:{a1:"vu",a2:"vu",b1:"vu",c1:"vu",doc:"vu"},trace:1},
+  {node:"res",rule:1,title:"Le fichier Word est écarté",text:"notes-reunion.docx n'est pas un PDF. Il ne l'ouvre pas et le note au journal, avec la raison.",bricks:["CLAUDE.md","Skill"],files:{doc:"ign"},journal:{k:"ign",t:"notes-reunion.docx : pas un PDF"}},
+  {node:"tool",rule:1,lock:true,title:"La serrure tient",text:"Il voudrait comparer avec le trimestre précédent et tente d'ouvrir /Veille/Q2. La permission refuse : même s'il le voulait, il ne peut pas.",bricks:["Permissions"],files:{q2a:"blq"},journal:{k:"ref",t:"/Veille/Q2 : hors périmètre, accès refusé"},trace:1},
+  {node:"res",rule:2,title:"Une ligne dans le moule",text:"rapport-A-juillet.pdf devient une ligne du gabarit .xlsx : onglet, date, source, catégorie, résumé.",bricks:["Skill"],files:{a1:"lu"},row:"a1",journal:{k:"trait",t:"rapport-A-juillet.pdf"},trace:1},
+  {node:"res",rule:2,title:"Deuxième ligne",text:"tarifs-A-aout.pdf rejoint l'onglet A, dans les mêmes colonnes.",bricks:["Skill"],files:{a2:"lu"},row:"a2",journal:{k:"trait",t:"tarifs-A-aout.pdf"},trace:1},
+  {node:"res",rule:4,title:"Un doute : pas de date",text:"Le communiqué de B n'est pas daté. Il laisse la cellule vide, la surligne et l'explique dans NOTES.md. Il n'invente rien.",bricks:["CLAUDE.md","Skill"],files:{b1:"lu"},row:"b1",note:"communique-B.pdf : date absente, cellule surlignée.",journal:{k:"trait",t:"communique-B.pdf (date manquante)"},trace:1},
+  {node:"done",rule:3,title:"« Terminé ? » C'est le script qui répond",text:"controle.py compte : 4 PDF dans Q3, 3 lignes dans le tableau. Le hook de fin l'empêche de s'arrêter et lui renvoie l'erreur.",bricks:["Script","Hook"],check:{k:"fail",t:"controle.py → 4 PDF, 3 lignes : ÉCHEC (code 2). Manquant : catalogue-C.pdf"}},
+  {node:"res",rule:3,title:"Il rattrape l'oubli",text:"L'erreur nomme le fichier manquant. Il traite catalogue-C.pdf.",bricks:["Skill"],files:{c1:"lu"},row:"c1",journal:{k:"trait",t:"catalogue-C.pdf"},trace:1},
+  {node:"done",rule:3,title:"Contrôle réussi",text:"4 PDF, 4 lignes. Cette fois, ce n'est pas l'agent qui décide qu'il a fini : c'est le critère.",bricks:["Script"],check:{k:"ok",t:"controle.py → 4 PDF, 4 lignes : OK (code 0)"}},
+  {node:"out",rule:5,title:"Livraison et journal",text:"Tu reçois le tableau, NOTES.md et le journal. Le hook a tracé chaque accès de son côté : tu compares les deux d'un coup d'œil.",bricks:["Hook","Skill"],jcheck:true},
+  {node:"ctx",title:"Et au prochain trimestre ?",text:"Tu lis NOTES.md et tu tranches : pour B, on prend la date du communiqué de presse lié. Ta décision va dans MEMORY.md, qui sera relu au départ. Ce doute ne se posera plus.",bricks:["Mémoire"],mem:"Pour B, prendre la date du communiqué de presse lié.",bilan:{k:"good",t:"0 invention, 1 doute signalé, 1 oubli rattrapé, tout est vérifiable."}}
+ ]
+};
+var mode="B", idx=0;
+
+function stateAt(i){
+  var s={files:{},rows:[],newRow:null,notes:[],journal:[],prose:[],trace:0,mem:null,jcheck:false};
+  var list=STEPS[mode];
+  for(var k=0;k<=i;k++){
+    var st=list[k];
+    if(st.files){for(var f in st.files){s.files[f]=st.files[f];}}
+    if(st.row){s.rows.push(st.row); if(k===i) s.newRow=st.row;}
+    if(st.note) s.notes.push(st.note);
+    if(st.journal) s.journal.push(st.journal);
+    if(st.prose) s.prose.push(st.prose);
+    if(st.trace) s.trace+=st.trace;
+    if(st.mem) s.mem=st.mem;
+    if(st.jcheck) s.jcheck=true;
+  }
+  return s;
+}
+function render(){
+  var list=STEPS[mode], st=list[idx], s=stateAt(idx);
+  $("#sim").classList.toggle("modeA",mode==="A");
+  ["ctx","llm","done","out","tool","res"].forEach(function(n){$("#n-"+n).classList.toggle("on",st.node===n);});
+  Array.prototype.forEach.call(document.querySelectorAll(".badge"),function(b){b.classList.toggle("hot",mode==="B"&&+b.getAttribute("data-b")===st.rule);});
+  /* narration */
+  var tags="";
+  if(st.rule){var r=RULES[st.rule-1];tags+='<span class="tag rule" data-r="'+r.n+'">Règle '+r.n+' · '+esc(r.name)+'</span>';}
+  if(st.bricks){tags+='<span class="tag">Assuré par</span>';st.bricks.forEach(function(b){tags+='<span class="tag brick">'+esc(b)+'</span>';});}
+  if(st.lock) tags+='<span class="tag lock">🔒 garantie</span>';
+  if(st.warn) tags+='<span class="tag warn">⚠ '+esc(st.warn)+'</span>';
+  var h='<div class="tags">'+tags+'</div><h3>'+esc(st.title)+'</h3><p>'+esc(st.text)+'</p>';
+  if(st.check) h+='<div class="check '+st.check.k+'">'+esc(st.check.t)+'</div>';
+  if(st.bilan) h+='<div class="bilan '+st.bilan.k+'">'+esc(st.bilan.t)+'</div>';
+  $("#narr").innerHTML=h;
+  /* fichiers */
+  var fh="";
+  FILES.forEach(function(f){
+    var v=s.files[f.id], cls=(mode==="B"&&f.q2&&v!=="blq")?' class="out"':"";
+    fh+='<li'+cls+'><span>'+esc(f.path)+'</span>'+(v?'<span class="st '+ST[v][0]+'">'+ST[v][1]+'</span>':'<span class="st vu">non ouvert</span>')+'</li>';
+  });
+  $("#files").innerHTML=fh;
+  /* livrable */
+  if(mode==="A"){
+    $("#livTitle").textContent="Le livrable : un texte libre";
+    if(!s.prose.length){$("#liv").innerHTML='<p class="empty">Rien pour l\'instant.</p>';}
+    else{var ph='<div class="prose">';s.prose.forEach(function(p){ph+='<p>'+esc(p.t)+(p.w?'<span class="wm">⚠ '+esc(p.w)+'</span>':'')+'</p>';});$("#liv").innerHTML=ph+'</div>';}
+  }else{
+    $("#livTitle").textContent="Le livrable : veille-Q3.xlsx";
+    if(!s.rows.length){$("#liv").innerHTML='<p class="empty">Gabarit vide : onglets et colonnes déjà en place.</p>';}
+    else{
+      var th='<div class="tbl-wrap"><table><thead><tr><th>Onglet</th><th>Date</th><th>Source</th><th>Catégorie</th><th>Résumé</th></tr></thead><tbody>';
+      s.rows.forEach(function(id){var r=ROWS[id];th+='<tr'+(id===s.newRow?' class="new"':'')+'><td>'+r.o+'</td><td'+(r.flag?' class="flag" title="Date absente, voir NOTES.md"':'')+'>'+(r.d||'&nbsp;')+'</td><td>'+esc(r.s)+'</td><td>'+esc(r.c)+'</td><td>'+esc(r.r)+'</td></tr>';});
+      $("#liv").innerHTML=th+'</tbody></table></div>';
+    }
+  }
+  /* notes */
+  var nh="";
+  if(mode==="A"){nh='<p class="empty">Aucune note : il n\'a signalé aucun doute.</p>';}
+  else{
+    nh=s.notes.length?'<ul class="list">'+s.notes.map(function(n){return '<li><b class="k-ign">doute</b><span>'+esc(n)+'</span></li>';}).join("")+'</ul>':'<p class="empty">Aucun doute pour l\'instant.</p>';
+    if(s.mem) nh+='<div class="memline">Tranché par toi, recopié dans <b>MEMORY.md</b> : « '+esc(s.mem)+' »</div>';
+  }
+  $("#notes").innerHTML=nh;
+  /* journal */
+  var jh="";
+  if(mode==="A"){jh='<p class="empty">Aucun journal.</p>';}
+  else{
+    var lab={trait:["k-trait","traité"],ign:["k-ign","ignoré"],ref:["k-ref","refusé"]};
+    jh=s.journal.length?'<ul class="list">'+s.journal.map(function(j){return '<li><b class="'+lab[j.k][0]+'">'+lab[j.k][1]+'</b><span>'+esc(j.t)+'</span></li>';}).join("")+'</ul>':'<p class="empty">Vide pour l\'instant.</p>';
+    jh+='<div class="hooktrace'+(s.jcheck?' okc':'')+'">Trace automatique du hook : '+s.trace+' accès'+(s.jcheck?' · cohérente avec le journal ✓':'')+'</div>';
+  }
+  $("#journal").innerHTML=jh;
+  /* contrôles */
+  $("#count").textContent="Étape "+(idx+1)+" / "+list.length;
+  $("#prev").disabled=idx===0;
+  $("#next").disabled=idx===list.length-1;
+}
+function setMode(m){mode=m;idx=0;$("#mA").setAttribute("aria-pressed",m==="A");$("#mB").setAttribute("aria-pressed",m==="B");render();}
+$("#mA").addEventListener("click",function(){setMode("A")});
+$("#mB").addEventListener("click",function(){setMode("B")});
+$("#next").addEventListener("click",function(){if(idx<STEPS[mode].length-1){idx++;render();}});
+$("#prev").addEventListener("click",function(){if(idx>0){idx--;render();}});
+$("#reset").addEventListener("click",function(){idx=0;render();});
+
+/* ===== Qui fait quoi ===== */
+var BRICKS=[
+ {id:"instr",name:"Instruction",kind:"texte",kl:"consigne lue",role:"Dit quoi faire cette fois-ci (le prompt de mission)."},
+ {id:"claude",name:"CLAUDE.md",kind:"texte",kl:"consigne lue",role:"Pose les règles du lieu, valables tout le temps."},
+ {id:"skill",name:"Skill",kind:"texte",kl:"consigne lue",role:"Donne la méthode d'une tâche qui revient, avec ses modèles."},
+ {id:"mem",name:"Mémoire",kind:"texte",kl:"consigne lue",role:"Garde ce qu'on a appris et décidé (MEMORY.md)."},
+ {id:"perm",name:"Permissions",kind:"garantie",kl:"garantie",role:"Autorise ou interdit, sans discussion (settings.json)."},
+ {id:"script",name:"Script",kind:"garantie",kl:"garantie",role:"Vérifie tout ce qui se compte."},
+ {id:"hook",name:"Hook",kind:"garantie",kl:"garantie",role:"Se déclenche tout seul à un moment précis."},
+ {id:"rag",name:"RAG",kind:"recherche",kl:"recherche",role:"Cherche dans ce qui est trop gros pour être lu en entier."},
+ {id:"cron",name:"Tâche planifiée",kind:"quand",kl:"déclencheur",role:"Lance le travail sans toi, à date fixe."}
+];
+var MAP={
+ 1:{instr:"« Traite le trimestre Q3 »",claude:"« Uniquement les PDF. Ne jamais modifier une source. »",perm:"Écriture interdite dans les sources, Q2 inaccessible"},
+ 2:{skill:"Colonnes date, source, catégorie, résumé + gabarit-veille.xlsx"},
+ 3:{skill:"Le critère écrit : 1 PDF = exactement 1 ligne",script:"controle.py compte et compare (code 0 ou 2)",hook:"Hook de fin : pas d'arrêt tant que le contrôle échoue"},
+ 4:{claude:"« N'extrapole jamais une donnée »",skill:"La procédure : vide, surligné, NOTES.md, 2 essais maximum",mem:"Les arbitrages que tu as rendus sur les doutes passés"},
+ 5:{skill:"Le format du journal : traités, ignorés, raisons",hook:"Trace automatique de chaque fichier ouvert"}
+};
+var TREE=[
+ {t:"Veille/",r:[]},
+ {t:"├── CLAUDE.md",r:[1,4],b:"claude"},
+ {t:"├── MEMORY.md",r:[4],b:"mem"},
+ {t:"├── .claude/",r:[]},
+ {t:"│   ├── settings.json",r:[1,3,5],b:"perm",tip:"permissions + déclaration des hooks"},
+ {t:"│   ├── hooks/trace-lectures.sh",r:[5],b:"hook"},
+ {t:"│   └── skills/veille-trimestrielle/",r:[]},
+ {t:"│       ├── SKILL.md",r:[2,3,4,5],b:"skill"},
+ {t:"│       ├── references/categories.md",r:[2],b:"skill"},
+ {t:"│       ├── assets/gabarit-veille.xlsx",r:[2],b:"skill"},
+ {t:"│       └── scripts/controle.py",r:[3],b:"script"},
+ {t:"├── Q3/  (les PDF)",r:[1]},
+ {t:"└── sorties/  (xlsx, NOTES.md, journal.md)",r:[2,4,5]}
+];
+var mapRule=1;
+function rulesOfBrick(id){var o=[];for(var k=1;k<=5;k++){if(MAP[k][id])o.push(k);}return o;}
+function renderMap(){
+  var ch='<button type="button" class="chip all" data-m="0" aria-pressed="'+(mapRule===0)+'">Toutes les règles</button>';
+  RULES.forEach(function(r){ch+='<button type="button" class="chip" data-r="'+r.n+'" data-m="'+r.n+'" aria-pressed="'+(mapRule===r.n)+'"><span class="rdot">'+r.n+'</span>'+esc(r.name)+'</button>';});
+  $("#mapChips").innerHTML=ch;
+  Array.prototype.forEach.call(document.querySelectorAll("#mapChips .chip"),function(b){b.addEventListener("click",function(){mapRule=+b.getAttribute("data-m");renderMap();});});
+  var bh="";
+  BRICKS.forEach(function(b){
+    var rs=rulesOfBrick(b.id), hit=mapRule===0?rs.length>0:!!MAP[mapRule][b.id];
+    var cls="brick"+(hit?" hit":" dim"), attr=mapRule?' data-r="'+mapRule+'"':"";
+    bh+='<div class="'+cls+'"'+attr+'><div class="bh"><h4>'+esc(b.name)+'</h4><span class="kind '+b.kind+'">'+b.kl+'</span></div><p class="role">'+esc(b.role)+'</p>';
+    if(mapRule&&MAP[mapRule][b.id]) bh+='<p class="what">'+esc(MAP[mapRule][b.id])+'</p>';
+    if(mapRule===0&&rs.length) bh+='<div class="dots">'+rs.map(function(n){return '<span class="rdot" data-r="'+n+'">'+n+'</span>';}).join("")+'</div>';
+    if(b.id==="rag") bh+='<p class="role"><i>Pas utilisé dans cette veille.</i></p>';
+    if(b.id==="cron") bh+='<p class="role"><i>Ne porte aucune des 5 règles : il décide seulement du moment.</i></p>';
+    bh+='</div>';
+  });
+  $("#bricks").innerHTML=bh;
+  var th="";
+  TREE.forEach(function(l){
+    var hit=mapRule===0?l.r.length>0:l.r.indexOf(mapRule)>=0;
+    th+='<div class="tl'+(hit?" hit":(l.r.length?" dim":""))+'"><span class="nm">'+esc(l.t)+'</span><span class="rr">'+l.r.map(function(n){return '<i data-r="'+n+'" title="Règle '+n+'"></i>';}).join("")+'</span></div>';
+  });
+  th+='<div class="prompt-line">Et le prompt de mission tient en une ligne : <b style="color:#ddff00">« Lance la veille trimestrielle sur Q3. »</b></div>';
+  $("#tree").innerHTML=th;
+}
+
+/* ===== Jeu ===== */
+var OPT={instr:"Instruction",claude:"CLAUDE.md",skill:"Skill",mem:"Mémoire",rag:"RAG",perm:"Permission",script:"Script",hook:"Hook",cron:"Tâche planifiée",notes:"NOTES.md"};
+var OPTSUB={instr:"le prompt de mission",claude:"règles permanentes",skill:"méthode répétable",mem:"ce qu'on a appris",rag:"recherche dans un gros corpus",perm:"autoriser / interdire",script:"contrôle qui compte",hook:"déclenchement automatique",cron:"à date fixe",notes:"fichier de travail du lancement"};
+var QS=[
+ {q:"« Traite le trimestre Q3. »",o:["instr","claude","skill","mem"],a:"instr",why:"Ça change à chaque lancement : au prochain, ce sera Q4."},
+ {q:"« Ne modifie jamais un fichier source. »",o:["mem","claude","instr","hook"],a:"claude",why:"C'est vrai pour tout le projet, tout le temps : c'est une règle du lieu."},
+ {q:"« Pour chaque PDF : repérer la date, classer, résumer en une phrase. »",o:["rag","instr","skill","claude"],a:"skill",why:"C'est une méthode qu'on refait à l'identique chaque trimestre."},
+ {q:"« Interdire vraiment l'écriture dans le dossier Q3. »",o:["claude","perm","skill","mem"],a:"perm",why:"« Vraiment » : une consigne écrite ne suffit pas, il faut une serrure."},
+ {q:"« Vérifier qu'il y a exactement une ligne par PDF. »",o:["skill","mem","script","rag"],a:"script",why:"Ça se compte : une machine le fait sans se tromper, à chaque fois."},
+ {q:"« communique-B.pdf : date absente. »",sub:"Un doute repéré pendant ce lancement",o:["mem","notes","claude","skill"],a:"notes",why:"C'est un doute de ce lancement-ci : il va dans le fichier de travail, pas dans la mémoire. Il n'y passera qu'une fois tranché."},
+ {q:"« Pour B, prendre la date du communiqué de presse lié. »",sub:"Ta décision, après avoir lu le doute",o:["notes","instr","mem","perm"],a:"mem",why:"C'est un arbitrage qui doit servir aux prochains trimestres. S'il se confirme, tu pourras plus tard l'intégrer au skill."},
+ {q:"« Noter automatiquement chaque fichier ouvert. »",o:["skill","hook","script","mem"],a:"hook",why:"« Automatiquement » : le hook se déclenche sans que l'agent ait à y penser."},
+ {q:"« Retrouver si un concurrent a déjà fait cette annonce depuis 2022. »",o:["mem","skill","rag","instr"],a:"rag",why:"Des années d'archives, c'est trop gros pour tout lire : on cherche dedans."},
+ {q:"« Lancer la veille le 1er de chaque trimestre. »",o:["instr","hook","claude","cron"],a:"cron",why:"C'est une question de moment, sans toi devant l'écran : une tâche planifiée."}
+];
+var qi=0, score=0, answered=false;
+function renderQuiz(){
+  var z=$("#quiz");
+  if(qi>=QS.length){
+    var msg=score>=9?"Tu sais ranger tes consignes.":score>=6?"La logique est là. Revois les briques qui t'ont piégé à l'étape 3.":"Reprends l'étape 3 : la question à se poser fait tout le travail.";
+    z.innerHTML='<div class="qcard final"><div class="score">'+score+' / '+QS.length+'</div><p style="margin:0">'+msg+'</p><p style="margin:0;color:var(--muted)">Change-t-il à chaque fois ? Instruction. Dure-t-il ? CLAUDE.md, skill ou mémoire. Doit-il être garanti ? Permission, script ou hook.</p><div><button type="button" class="btn primary" id="qrestart">Recommencer</button></div></div>';
+    $("#qrestart").addEventListener("click",function(){qi=0;score=0;answered=false;renderQuiz();});
+    return;
+  }
+  var Q=QS[qi];
+  var h='<div class="qhead"><span>Consigne '+(qi+1)+' sur '+QS.length+'</span><span>Score : '+score+'</span></div><div class="bar"><i style="width:'+(qi/QS.length*100)+'%"></i></div>';
+  h+='<div class="qcard"><p class="qtext">'+(Q.sub?'<small>'+esc(Q.sub)+'</small>':'')+esc(Q.q)+'</p><div class="opts">';
+  Q.o.forEach(function(o){h+='<button type="button" class="opt" data-o="'+o+'">'+esc(OPT[o])+'<span>'+esc(OPTSUB[o])+'</span></button>';});
+  h+='</div><div id="fb" aria-live="polite"></div></div>';
+  z.innerHTML=h;
+  Array.prototype.forEach.call(z.querySelectorAll(".opt"),function(b){
+    b.addEventListener("click",function(){
+      if(answered) return; answered=true;
+      var o=b.getAttribute("data-o"), ok=o===Q.a; if(ok) score++;
+      Array.prototype.forEach.call(z.querySelectorAll(".opt"),function(x){x.disabled=true;var xo=x.getAttribute("data-o");if(xo===Q.a)x.classList.add("good");else if(x===b)x.classList.add("bad");});
+      $("#fb").innerHTML='<div class="fb '+(ok?'good':'bad')+'"><strong>'+(ok?'Bien vu.':'Pas tout à fait : c\'est '+esc(OPT[Q.a])+'.')+'</strong><span>'+esc(Q.why)+'</span><div style="margin-top:8px"><button type="button" class="btn primary" id="qnext">'+(qi===QS.length-1?'Voir mon score':'Consigne suivante →')+'</button></div></div>';
+      $("#qnext").addEventListener("click",function(){qi++;answered=false;renderQuiz();});
+      $("#qnext").focus();
+    });
+  });
+}
+
+renderBrief(); renderDetail(); render(); renderMap(); renderQuiz();
+})();
+</script>
+<a href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:9999;font:700 14px system-ui,sans-serif;background:#001662;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 8px 24px rgba(20,23,43,.10)">← Menu</a>
+</body>
+</html>
