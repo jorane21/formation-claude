@@ -31,6 +31,14 @@ section{display:grid;gap:14px;scroll-margin-top:16px}
 .card span{font-size:14px;color:var(--muted)}
 .type{justify-self:start;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--lime);color:#151a33;padding:2px 8px;border-radius:999px;margin-bottom:4px}
 .note{color:var(--muted);max-width:70ch;margin:0;font-size:15px}
+.debutant{background:#0f2a7a;color:#fff;border-radius:20px;padding:24px 22px;gap:16px}
+.debutant h2{color:#fff}
+.debutant h2 span{color:#c9d3f5}
+.debutant .intro{margin:0;color:#dde4fb;max-width:62ch}
+.debutant .card{border-color:transparent;color:var(--ink)}
+.debutant .card:hover{border-color:var(--lime)}
+.debutant .card:focus-visible{outline-color:var(--lime)}
+.toc a.deb{background:var(--lime);color:#151a33;border-color:var(--lime)}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -42,6 +50,7 @@ section{display:grid;gap:14px;scroll-margin-top:16px}
   </header>
 
   <nav class="toc" aria-label="Sommaire">
+    <a class="deb" href="#debutant">Niveau débutant</a>
     <a href="#carte">Vue d'ensemble</a>
     <a href="#niveaux">1. Pourquoi monter en niveau</a>
     <a href="#prompt">2. Écrire un bon prompt</a>
@@ -53,6 +62,13 @@ section{display:grid;gap:14px;scroll-margin-top:16px}
     <a href="#ressources">8. Ressources</a>
   </nav>
 
+  <section id="debutant" class="debutant">
+    <h2>Niveau débutant <span>1 page</span></h2>
+    <p class="intro">Tu découvres Claude ? Commence ici : une première prise en main, sans coder.</p>
+    <div class="grid">
+      <a class="card" href="animation-creer-assistant-claude.html"><span class="type">Animation</span><b>Créer son assistant Claude</b><span>8 étapes sans coder : projet, consignes, documents, connecteurs, compétences, test et tâche programmée. La fiche de l'assistant se remplit à chaque étape.</span></a>
+    </div>
+  </section>
   <section id="carte">
     <h2>Vue d'ensemble <span>1 page</span></h2>
     <div class="grid">
@@ -108,9 +124,8 @@ section{display:grid;gap:14px;scroll-margin-top:16px}
   </section>
 
   <section id="agents">
-    <h2>6. Construire un agent <span>12 pages</span></h2>
+    <h2>6. Construire un agent <span>11 pages</span></h2>
     <div class="grid">
-      <a class="card" href="animation-creer-assistant-claude.html"><span class="type">Animation</span><b>Créer son assistant Claude</b><span>8 étapes sans coder : projet, consignes, documents, connecteurs, compétences, test et tâche programmée. La fiche de l'assistant se remplit à chaque étape.</span></a>
       <a class="card" href="animation-dossier-projet-environnement.html"><span class="type">Animation</span><b>Dossier, projet, environnement</b><span>Trois mots à ne pas confondre : qui range, qui explique, qui ouvre, et qui commande quand plusieurs dossiers sont ouverts.</span></a>
       <a class="card" href="schema-projet-navigateur-vs-cowork.html"><span class="type">Schéma</span><b>Navigateur ou Cowork local</b><span>Deux façons de monter le même projet Claude.</span></a>
       <a class="card" href="animation-construction-projet-repas.html"><span class="type">Animation</span><b>Construire un projet</b><span>Un projet agentique, brique par brique.</span></a>
