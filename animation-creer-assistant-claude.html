@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Créer son assistant Claude</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Charte : Akyos Design System (comme les autres fiches). Mise en page : hero bleu, puis 2 colonnes (étape interactive | fiche de l'assistant qui se remplit). */
+:root{
+  --blue-900:#001662; --blue-800:#041a71; --blue-500:#0971ce; --blue-100:#e6f0fb; --blue-50:#f7fafd;
+  --coral:#cc3449; --coral-100:#fbe8ea; --lime:#ddff00; --white:#ffffff; --fond:#fafafd;
+  --ink-900:#14172b; --ink-700:#3c4058; --ink-500:#6b6f87; --ink-100:#e3e5ec; --ink-50:#f4f5f8;
+  --green:#1f8a4c; --green-100:#e5f5ec;
+  --r-md:12px; --r-lg:20px; --pill:999px;
+  --shadow:0 8px 24px rgba(20,23,43,.10);
+  --font:"Pangram",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.2,0,0,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--ink-900);font-family:var(--font);font-size:1rem;line-height:1.55}
+.in{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hero{background:var(--blue-900);color:var(--white);margin-top:calc(-1 * env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 40px);padding-bottom:32px}
+.kicker{display:inline-block;background:var(--lime);color:var(--ink-900);font-size:.75rem;font-weight:700;letter-spacing:.04em;padding:4px 12px;border-radius:var(--pill);text-transform:uppercase}
+.hero h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.1;font-weight:800;margin:14px 0 8px;text-wrap:balance}
+.hero p{margin:0;max-width:62ch;font-size:1.08rem;color:#d6dcf0}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.hero .meta span{border:1.5px solid rgba(255,255,255,.3);border-radius:var(--pill);padding:4px 12px;font-size:.8rem}
+main.in{padding-block:24px 96px;display:grid;gap:20px}
+.analogy{background:var(--white);border-radius:var(--r-md);padding:14px 18px;border:1.5px solid var(--ink-100);font-size:.95rem;color:var(--ink-700)}
+.analogy b{color:var(--blue-900)}
+.track{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dot{width:38px;height:38px;border-radius:50%;border:2px solid var(--ink-100);background:var(--white);color:var(--ink-500);font-weight:700;cursor:pointer;font:inherit;font-weight:700;transition:all 200ms var(--ease)}
+.dot.done{background:var(--blue-100);border-color:var(--blue-900);color:var(--blue-900)}
+.dot.on{background:var(--blue-900);border-color:var(--blue-900);color:var(--white);transform:scale(1.08)}
+.dot.end{width:auto;padding:0 14px;border-radius:var(--pill)}
+.dot:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--blue-500);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:28px;min-width:0}
+.card h2{font-size:1.6rem;line-height:1.25;margin:4px 0 6px;color:var(--blue-900);text-wrap:balance}
+.num{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--ink-500);text-transform:uppercase}
+.lead{color:var(--ink-700);margin:0 0 14px;max-width:65ch}
+.path{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 16px;font-size:.85rem;color:var(--ink-500)}
+.path kbd{font-family:var(--font);font-weight:700;font-size:.85rem;background:var(--blue-50);color:var(--blue-900);border:1.5px solid var(--ink-100);border-radius:8px;padding:3px 10px;transition:all 250ms var(--ease)}
+.path kbd.lit{background:var(--blue-900);color:var(--white);border-color:var(--blue-900)}
+.paid{background:#ffe9a8;color:#6b4a00;font-size:.7rem;font-weight:800;letter-spacing:.05em;border-radius:var(--pill);padding:3px 10px;vertical-align:middle}
+button{font:inherit;cursor:pointer;border-radius:var(--pill);transition:background 160ms var(--ease),color 160ms var(--ease),border-color 160ms var(--ease),transform 120ms var(--ease)}
+button:active{transform:scale(.97)}
+.btn{background:var(--blue-900);color:var(--white);border:0;padding:11px 22px;font-weight:700}
+.btn:hover{background:var(--blue-800)}
+.btn.ghost{background:transparent;color:var(--blue-900);border:1.5px solid var(--ink-100);font-weight:500}
+.btn.ghost:hover{border-color:var(--blue-900)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{background:var(--white);color:var(--ink-700);border:1.5px solid var(--ink-100);padding:7px 14px;font-size:.875rem;font-weight:500}
+.chip:hover{border-color:var(--blue-900)}
+.chip.on{background:var(--blue-100);border-color:var(--blue-900);color:var(--blue-900)}
+.chip.bad{background:var(--coral-100);border-color:var(--coral);color:var(--coral)}
+label.q{display:block;font-weight:700;font-size:.9rem;margin-top:12px;color:var(--ink-900)}
+input[type=text]{font:inherit;width:100%;max-width:420px;padding:10px 14px;border:1.5px solid var(--ink-100);border-radius:var(--r-md);background:var(--white);color:var(--ink-900)}
+.box{background:var(--ink-50);border-radius:var(--r-md);padding:14px 16px;margin-top:12px;font-size:.92rem;min-width:0}
+.box pre{margin:0;white-space:pre-wrap;font-family:var(--mono);font-size:.85rem;line-height:1.6}
+.fb{border-radius:var(--r-md);padding:12px 16px;margin-top:12px;font-size:.92rem}
+.fb.ok{background:var(--green-100);color:#14532d}
+.fb.ko{background:var(--coral-100);color:#7a1d2a}
+.fb.info{background:var(--blue-50);color:var(--ink-700)}
+.fb b{font-weight:700}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:22px;flex-wrap:wrap}
+.copy{display:flex;gap:10px;align-items:flex-start;background:var(--blue-50);border:1.5px dashed var(--blue-500);border-radius:var(--r-md);padding:12px 14px;margin-top:10px}
+.copy q{flex:1;font-style:italic;color:var(--ink-900)}
+.copy button{flex:none;background:var(--white);border:1.5px solid var(--ink-100);padding:5px 12px;font-size:.8rem;font-weight:700;color:var(--blue-900)}
+/* Fiche de l'assistant */
+.sheet{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.sheet h3{margin:0 0 2px;font-size:1rem;color:var(--blue-900)}
+.sheet .who{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:52px;height:52px;border-radius:16px;background:var(--blue-100);display:grid;place-items:center;flex:none;transition:transform 400ms var(--ease)}
+.avatar svg{width:30px;height:30px}
+.avatar.pulse{animation:pulse 600ms var(--ease)}
+@keyframes pulse{50%{transform:scale(1.15) rotate(-6deg)}}
+.name{font-size:1.15rem;font-weight:800;color:var(--ink-900);word-break:break-word}
+.slot{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--ink-100);font-size:.88rem;color:var(--ink-500)}
+.slot i{font-style:normal;flex:none;width:22px;height:22px;border-radius:50%;border:2px dashed var(--ink-100);display:grid;place-items:center;font-size:.75rem;transition:all 300ms var(--ease)}
+.slot.fill{color:var(--ink-900)}
+.slot.fill i{background:var(--blue-900);border:2px solid var(--blue-900);color:var(--white)}
+.slot b{display:block;color:var(--ink-900);font-size:.82rem}
+.slot span{display:block;word-break:break-word}
+.score{margin-top:12px;height:8px;background:var(--ink-100);border-radius:var(--pill);overflow:hidden}
+.score div{height:100%;background:var(--blue-900);width:0;transition:width 500ms var(--ease)}
+.warn{background:#fff7e0;border-radius:var(--r-md);padding:12px 16px;font-size:.88rem;color:#5c4400}
+.src{font-size:.8rem;color:var(--ink-500)}
+.src a{color:var(--blue-500)}
+.quiz .qq{margin-top:16px}
+.quiz .qq p{margin:0 0 6px;font-weight:700}
+.fade{animation:fade 300ms var(--ease)}
+@keyframes fade{from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="hero"><div class="in">
+  <span class="kicker">Pas à pas · sans coder</span>
+  <h1>Créer son assistant IA avec Claude</h1>
+  <p>Un assistant réglé pour <b>ta tâche</b>, <b>tes documents</b> et <b>tes outils</b>. Suis les 8 étapes : à chaque étape, la fiche de ton assistant se remplit à droite.</p>
+  <div class="meta"><span>≈ 10 min</span><span>Niveau débutant</span><span>Exemple : une agence web qui prépare ses devis</span></div>
+</div></header>
+
+<main class="in">
+  <div class="analogy">💡 <b>Image à garder en tête :</b> créer un assistant, c'est accueillir un <b>nouveau collègue</b>. Tu lui donnes un nom et un bureau (le projet), une fiche de poste (les consignes), les dossiers de l'entreprise (les documents), des accès aux outils (les connecteurs), des savoir-faire (les compétences). Puis tu le mets à l'essai.</div>
+
+  <nav class="track" id="track" aria-label="Étapes"></nav>
+
+  <div class="grid">
+    <section class="card" id="stage" aria-live="polite"></section>
+
+    <aside class="card sheet" aria-label="Fiche de l'assistant">
+      <div class="who">
+        <div class="avatar" id="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#001662" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19"/></svg></div>
+        <div><h3>Fiche de l'assistant</h3><div class="name" id="sName">Sans nom</div></div>
+      </div>
+      <div id="slots"></div>
+      <div class="score" aria-hidden="true"><div id="bar"></div></div>
+    </aside>
+  </div>
+
+  <div class="warn">⚠️ <b>Les menus bougent souvent.</b> Les noms de boutons indiqués ici (« Projets », « Instructions », « Connecteurs »…) servent de repères : vérifie-les dans ton application. Les fonctions programmées sont réservées aux offres payantes.</div>
+  <p class="src">Contenu adapté d'une infographie de L'AllIAnce : <a href="https://lallianceia.fr/guide-agents" target="_blank" rel="noopener">lallianceia.fr/guide-agents</a>. Animation et exemples conçus pour cette formation.</p>
+</main>
+
+<a href="index.html" style="position:fixed;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:700 14px system-ui,sans-serif;background:#001662;color:#fff;padding:8px 14px;border-radius:999px;text-decoration:none;box-shadow:0 8px 24px rgba(20,23,43,.10)">← Menu</a>
+
+<script>
+const S = {name:"", role:null, goal:null, tone:null, docs:new Set(), tools:{}, skills:new Set(), tested:false, sched:null, done:new Set(), step:0};
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const SLOTS = [
+  ["Compte", () => S.done.has(0) && "claude.ai ouvert"],
+  ["Projet", () => S.name && `« ${esc(S.name)} »`],
+  ["Consignes", () => S.role && S.goal && S.tone && `${S.role} · ${S.goal} · ton ${S.tone}`],
+  ["Documents", () => S.docs.size && [...S.docs].join(", ")],
+  ["Outils", () => { const t = Object.entries(S.tools).filter(([,v]) => v !== "off"); return t.length && t.map(([k,v]) => `${k} (${v})`).join(", "); }],
+  ["Compétences", () => S.skills.size && [...S.skills].join(", ")],
+  ["Test", () => S.tested && "testé et consignes corrigées"],
+  ["Travail seul", () => S.sched && S.sched],
+];
+
+const DOCS = [
+  {n:"Grille tarifaire 2026.pdf", ok:true},
+  {n:"Modèle de devis.docx", ok:true},
+  {n:"CGV de l'agence.pdf", ok:true},
+  {n:"Photos du séminaire.zip", ok:false, why:"Aucun rapport avec les devis : ça encombre sa mémoire de travail et peut le distraire."},
+  {n:"Fichier clients avec RIB.xlsx", ok:false, why:"Données sensibles ! On ne donne que le strict nécessaire, jamais de coordonnées bancaires."},
+];
+
+const STEPS = [
+  { t:"Ouvre Claude", p:["claude.ai"], lead:"Crée ton compte sur <b>claude.ai</b>. Une offre gratuite existe : suffisante pour essayer les étapes 1 à 7.",
+    body:() => `<div class="box fade" id="mock"><pre>🌐 claude.ai\n\n   [ Continuer avec e-mail ]</pre></div>
+      <div class="chips"><button class="btn" id="go">Simuler la connexion</button></div>`,
+    bind:() => $("#go").onclick = () => { $("#mock").innerHTML = "<pre>🌐 claude.ai\n\n   Bonjour ! Comment puis-je vous aider ?\n   ───────────────────────────\n   ▸ Projets   ▸ Discussions</pre>"; finish(0, "Compte ouvert. Repère le menu <b>Projets</b> : c'est là que vivra ton assistant."); } },
+
+  { t:"Crée un projet", p:["Projets","Nouveau projet"], lead:"Un <b>projet</b> est le bureau de ton assistant : tout ce que tu y ranges, il le retrouve à chaque conversation. <b>Son nom = le nom de ton assistant.</b>",
+    body:() => `<label class="q" for="nm">Nom de l'assistant</label><input type="text" id="nm" placeholder="ex. Assistant devis" value="${esc(S.name)}" maxlength="40">
+      <div class="chips"><button class="chip" data-n="Assistant devis">Assistant devis</button><button class="chip" data-n="Assistant relance clients">Assistant relance clients</button></div>
+      <div class="fb info">Projet ≠ prompt : un <b>prompt</b> est une demande ponctuelle dans une conversation ; le <b>projet</b> garde le cadre pour toutes les conversations.</div>`,
+    bind:() => { const f = v => { S.name = v.trim(); render(false); if (S.name) finish(1); };
+      $("#nm").oninput = e => f(e.target.value);
+      document.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { $("#nm").value = b.dataset.n; f(b.dataset.n); }); } },
+
+  { t:"Écris ses consignes", p:["Instructions","Ajouter"], lead:"Les <b>instructions</b> sont sa fiche de poste : <b>son rôle, son but, son ton</b>. Il les relit avant chaque réponse. Compose-les :",
+    body:() => `<label class="q">Rôle</label>${chips("role",["chargé de devis d'une agence web","expert en tout"])}
+      <label class="q">But</label>${chips("goal",["préparer un devis clair à partir d'un brief","répondre à tout"])}
+      <label class="q">Ton</label>${chips("tone",["professionnel et chaleureux","neutre et factuel"])}
+      <div id="fb3"></div><div class="box" id="instr"></div>
+      <p style="margin:16px 0 0;font-weight:700">Pas d'idée ? Demande à Claude de t'interviewer :</p>
+      <div class="copy"><q id="meta">Pose-moi tes questions une par une, puis écris ses consignes. Je débute.</q><button id="cp">Copier</button></div>`,
+    bind:() => { bindChips(); $("#cp").onclick = () => copy($("#meta").textContent, $("#cp")); showInstr(); } },
+
+  { t:"Donne-lui tes documents", p:["Contexte","Ajouter"], lead:"Il <b>s'appuie sur tes documents</b> pour répondre. Clique sur ceux qui sont utiles à un assistant devis — et seulement ceux-là.",
+    body:() => `<div class="chips">${DOCS.map((d,i) => `<button class="chip ${S.docs.has(d.n)?"on":""}" data-d="${i}">📄 ${d.n}</button>`).join("")}</div><div id="fb4"></div>`,
+    bind:() => document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { const d = DOCS[b.dataset.d];
+      if (!d.ok) { b.classList.add("bad"); $("#fb4").innerHTML = `<div class="fb ko fade"><b>Non.</b> ${d.why}</div>`; return; }
+      S.docs.has(d.n) ? S.docs.delete(d.n) : S.docs.add(d.n); b.classList.toggle("on"); render(false);
+      const good = DOCS.filter(x => x.ok).every(x => S.docs.has(x.n));
+      $("#fb4").innerHTML = good ? `<div class="fb ok fade"><b>Parfait.</b> Peu de documents, mais les bons : c'est ce qui rend ses réponses fiables.</div>` : "";
+      if (good) finish(3); }) },
+
+  { t:"Branche tes outils", p:["Plug-ins","Connecteurs"], lead:"Les <b>connecteurs</b> lui ouvrent tes outils (Gmail, Drive, Slack…). <b>Tu choisis ses droits.</b> Règle chaque accès :",
+    body:() => ["Gmail","Drive","Slack"].map(k => `<div class="slot" style="border:0;padding:6px 0;align-items:center"><b style="width:60px;font-size:.9rem">${k}</b><div class="chips" style="margin:0">${["off","lecture","lecture + écriture"].map(v => `<button class="chip ${ (S.tools[k]||"off")===v?"on":""}" data-t="${k}" data-v="${v}">${v==="off"?"aucun accès":v}</button>`).join("")}</div></div>`).join("") + `<div id="fb5"></div>`,
+    bind:() => document.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { S.tools[b.dataset.t] = b.dataset.v; render(false); renderStage();
+      const w = Object.values(S.tools).includes("lecture + écriture"), any = Object.values(S.tools).some(v => v !== "off");
+      $("#fb5").innerHTML = w ? `<div class="fb ko fade"><b>Prudence.</b> Avec l'écriture, il peut envoyer des mails ou modifier des fichiers. Pour débuter, reste en <b>lecture</b> et donne plus de droits quand tu lui fais confiance.</div>`
+        : any ? `<div class="fb ok fade"><b>Bon réflexe.</b> Lecture seule : il consulte, il ne modifie rien.</div>` : "";
+      if (any) finish(4); }) },
+
+  { t:"Ajoute des compétences", p:["Plug-ins","Skills"], lead:"Les <b>compétences</b> (Skills) sont des savoir-faire prêts à l'emploi : produire un vrai fichier Excel, Word, PowerPoint ou PDF. Lesquels sont utiles pour livrer un devis ?",
+    body:() => `<div class="chips">${["Excel","Word","PowerPoint","PDF"].map(k => `<button class="chip ${S.skills.has(k)?"on":""}" data-s="${k}">${k}</button>`).join("")}</div><div id="fb6"></div>`,
+    bind:() => document.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const k = b.dataset.s; S.skills.has(k) ? S.skills.delete(k) : S.skills.add(k); b.classList.toggle("on"); render(false);
+      const ok = S.skills.has("Word") || S.skills.has("PDF");
+      $("#fb6").innerHTML = S.skills.size ? `<div class="fb ${ok?"ok":"info"} fade">${ok ? "<b>Oui.</b> Un devis se livre en Word ou en PDF. Excel peut servir pour le chiffrage." : "Utile, mais un devis client se livre plutôt en <b>Word</b> ou en <b>PDF</b>."}</div>` : "";
+      if (S.skills.size) finish(5); }) },
+
+  { t:"Teste, puis corrige", p:["Nouvelle conversation dans le projet"], lead:"Donne-lui <b>une vraie tâche</b>. Pas convaincu ? <b>Corrige ses consignes</b>, pas seulement ta question.",
+    body:() => `<div class="box"><b>Toi :</b> Prépare le devis pour la refonte du site de la boulangerie Martin.</div>
+      <div class="box"><b>${esc(S.name||"L'assistant")} :</b> Voici un devis : refonte complète… <b>Total : 4 500 € TTC</b>. <span style="color:var(--coral)">(Il a inventé un prix au lieu d'utiliser ta grille, et oublié l'acompte.)</span></div>
+      <p style="font-weight:700;margin:14px 0 6px">Que fais-tu ?</p>
+      <div class="chips" style="flex-direction:column;align-items:flex-start">
+        <button class="chip" data-a="0">Je lui redemande en reformulant ma question, à chaque fois</button>
+        <button class="chip" data-a="1">J'ajoute dans ses consignes : « Utilise toujours la grille tarifaire. Ajoute un acompte de 30 %. Si une info manque, demande-la. »</button>
+        <button class="chip" data-a="2">J'abandonne : l'IA n'est pas fiable</button>
+      </div><div id="fb7"></div>`,
+    bind:() => document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const a = +b.dataset.a;
+      document.querySelectorAll("[data-a]").forEach(x => x.classList.remove("on","bad")); b.classList.add(a===1?"on":"bad");
+      $("#fb7").innerHTML = a===1 ? `<div class="fb ok fade"><b>Exactement.</b> Corriger les consignes règle le problème <b>pour toutes les prochaines fois</b>. Reteste avec la même tâche pour vérifier.</div>`
+        : `<div class="fb ko fade">${a===0 ? "Ça marchera une fois, puis l'erreur reviendra : la cause est dans ses consignes." : "Chaque assistant s'améliore par essais. Une erreur repérée = une consigne à ajouter."}</div>`;
+      if (a===1) { S.tested = true; render(false); finish(6); } }) },
+
+  { t:"Fais-le travailler seul", paid:true, p:["Programmé","Ajouter"], lead:"Une tâche qui revient chaque jour, chaque semaine… Tu peux la <b>programmer</b> : il la lance tout seul. Choisis un rythme :",
+    body:() => `<div class="chips">${["Chaque lundi 9 h : relancer les devis sans réponse","Chaque jour 18 h : résumer les demandes reçues","Chaque 1er du mois : bilan des devis signés"].map(k => `<button class="chip ${S.sched===k?"on":""}" data-p="${esc(k)}">${k}</button>`).join("")}</div>
+      <div class="fb info">Réservé aux <b>offres payantes</b>. Garde un œil sur les premiers résultats avant de le laisser vraiment seul.</div>`,
+    bind:() => document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { S.sched = b.dataset.p; render(false); renderStage(); finish(7); }) },
+
+  { t:"Ton assistant est prêt", p:[], lead:"Vérifie que tu as compris les trois briques qu'on confond souvent.",
+    body:() => `<div class="quiz">${QUIZ.map((q,i) => `<div class="qq"><p>${q.q}</p><div class="chips">${q.a.map((a,j) => `<button class="chip" data-q="${i}" data-j="${j}">${a}</button>`).join("")}</div><div id="qf${i}"></div></div>`).join("")}</div>`,
+    bind:() => document.querySelectorAll("[data-q]").forEach(b => b.onclick = () => { const q = QUIZ[b.dataset.q], ok = +b.dataset.j === q.c;
+      b.parentNode.querySelectorAll("button").forEach(x => x.classList.remove("on","bad")); b.classList.add(ok?"on":"bad");
+      $("#qf"+b.dataset.q).innerHTML = `<div class="fb ${ok?"ok":"ko"} fade">${ok?"<b>Juste.</b> ":""}${q.e}</div>`; }) },
+];
+
+const QUIZ = [
+  {q:"« Prépare le devis pour la boulangerie Martin. » C'est…", a:["un prompt","une consigne","un projet"], c:0, e:"Un <b>prompt</b> : une demande ponctuelle, dans une conversation."},
+  {q:"« Utilise toujours la grille tarifaire. » C'est…", a:["un prompt","une consigne","un document"], c:1, e:"Une <b>consigne</b> : une règle permanente, rangée dans les instructions du projet."},
+  {q:"L'espace qui garde consignes + documents pour toutes les conversations, c'est…", a:["une conversation","un connecteur","un projet"], c:2, e:"Le <b>projet</b> : le bureau de ton assistant."},
+];
+
+function chips(key, opts){ return `<div class="chips">${opts.map(o => `<button class="chip ${S[key]===o?"on":""}" data-k="${key}" data-o="${esc(o)}">${o}</button>`).join("")}</div>`; }
+function bindChips(){ document.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { S[b.dataset.k] = b.dataset.o;
+  b.parentNode.querySelectorAll("button").forEach(x => x.classList.toggle("on", x===b)); showInstr(); render(false); }); }
+function showInstr(){
+  const vague = [S.role,S.goal].some(v => v && /tout/.test(v));
+  $("#fb3").innerHTML = vague ? `<div class="fb ko fade"><b>Trop vague.</b> « Expert en tout », « répondre à tout » : il ne saura pas sur quoi se concentrer. Sois précis.</div>` : "";
+  $("#instr").innerHTML = `<pre>Tu es ${S.role||"…"}.\nTon but : ${S.goal||"…"}.\nTon ton : ${S.tone||"…"}.</pre>`;
+  if (S.role && S.goal && S.tone && !vague) finish(2, null, true); else S.done.delete(2), render(false);
+}
+async function copy(t, btn){ try { await navigator.clipboard.writeText(t); btn.textContent = "Copié ✓"; } catch { const r = document.createRange(); r.selectNodeContents($("#meta")); getSelection().removeAllRanges(); getSelection().addRange(r); btn.textContent = "Sélectionné"; } }
+
+function finish(i, msg, quiet){
+  const first = !S.done.has(i); S.done.add(i); render(false);
+  if (first) { const a = $("#avatar"); a.classList.remove("pulse"); void a.offsetWidth; a.classList.add("pulse"); }
+  if (msg) $("#stage .body").insertAdjacentHTML("beforeend", `<div class="fb ok fade">${msg}</div>`);
+  const n = $("#next"); if (n) n.disabled = false;
+}
+
+function render(full = true){
+  $("#track").innerHTML = STEPS.map((s,i) => `<button class="dot ${i===8?"end":""} ${S.done.has(i)?"done":""} ${i===S.step?"on":""}" data-g="${i}" aria-label="Étape ${i+1} : ${s.t}" ${i===S.step?'aria-current="step"':""}>${i===8?"✓ Prêt":i+1}</button>`).join("");
+  document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { S.step = +b.dataset.g; render(); });
+  $("#sName").textContent = S.name || "Sans nom";
+  $("#slots").innerHTML = SLOTS.map(([k,f],i) => { const v = f(); return `<div class="slot ${v?"fill":""}"><i>${v?"✓":i+1}</i><span><b>${k}</b>${v || "à compléter"}</span></div>`; }).join("");
+  $("#bar").style.width = (SLOTS.filter(([,f]) => f()).length / SLOTS.length * 100) + "%";
+  if (full) renderStage();
+}
+
+function renderStage(){
+  const s = STEPS[S.step], i = S.step;
+  $("#stage").innerHTML = `<div class="fade">
+    <div class="num">${i<8 ? `Étape ${i+1} sur 8` : "Bilan"} ${s.paid?'<span class="paid">OFFRE PAYANTE</span>':""}</div>
+    <h2>${s.t}</h2><p class="lead">${s.lead}</p>
+    ${s.p.length ? `<div class="path">Où cliquer : ${s.p.map(x => `<kbd>${x}</kbd>`).join(" › ")}</div>` : ""}
+    <div class="body">${s.body()}</div>
+    <div class="nav"><button class="btn ghost" id="prev" ${i===0?"disabled":""}>← Précédent</button>
+    ${i<8 ? `<button class="btn" id="next" ${S.done.has(i)?"":"disabled"}>${i===7?"Voir le bilan":"Étape suivante"} →</button>` : `<button class="btn ghost" id="reset">Recommencer</button>`}</div></div>`;
+  s.bind();
+  document.querySelectorAll(".path kbd").forEach((k,j) => setTimeout(() => k.classList.add("lit"), 400 + j*450));
+  $("#prev").onclick = () => { S.step--; render(); };
+  if ($("#next")) $("#next").onclick = () => { S.step++; render(); $("#stage").scrollIntoView({behavior:"smooth", block:"start"}); };
+  if ($("#reset")) $("#reset").onclick = () => { Object.assign(S, {name:"",role:null,goal:null,tone:null,docs:new Set(),tools:{},skills:new Set(),tested:false,sched:null,done:new Set(),step:0}); render(); };
+}
+render();
+</script>
